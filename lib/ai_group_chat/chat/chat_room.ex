@@ -2,10 +2,11 @@ defmodule AiGroupChat.Chat.ChatRoom do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @primary_key {:id, :binary_id, autogenerate: true}
   schema "chat_rooms" do
     field :name, :string
-    field :user_id, :id
 
+    belongs_to :user, AiGroupChat.Accounts.User, type: :binary_id
     timestamps(type: :utc_datetime)
   end
 

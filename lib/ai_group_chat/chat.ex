@@ -7,6 +7,7 @@ defmodule AiGroupChat.Chat do
   alias AiGroupChat.Repo
 
   alias AiGroupChat.Chat.ChatRoom
+  alias AiGroupChat.Chat.Message
 
   @doc """
   Returns the list of chat_rooms.
@@ -50,7 +51,7 @@ defmodule AiGroupChat.Chat do
 
   """
   def create_chat_room(attrs \\ %{}) do
-    %ChatRoom{}
+    %ChatRoom{id: Ecto.UUID.generate()}
     |> ChatRoom.changeset(attrs)
     |> Repo.insert()
   end
@@ -100,5 +101,36 @@ defmodule AiGroupChat.Chat do
   """
   def change_chat_room(%ChatRoom{} = chat_room, attrs \\ %{}) do
     ChatRoom.changeset(chat_room, attrs)
+  end
+
+  @doc """
+  Creates a message.
+
+  ## Examples
+
+      iex> create_message(%{ content: "Hello", chat_room_id: chat_room.id, user_id: user.id })
+      {:ok, %Message{}}
+
+      iex> create_message(%{ content: "Hi", chat_room_id: chat_room.id, sender_name: "Guest" })
+      {:ok, %Message{}}
+
+      iex> create_message(%{ content: "Bad message" })
+      {:error, %Ecto.Changeset{}}
+  """
+  def create_message(attrs \\ %{}) do
+    %Message{}
+    |> Message.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Returns the list of messages for a chat room.
+  """
+  def list_messages_by_room(chat_room_id) do
+    Repo.all(
+      from m in Message,
+        where: m.chat_room_id == ^chat_room_id,
+        order_by: m.inserted_at
+    )
   end
 end

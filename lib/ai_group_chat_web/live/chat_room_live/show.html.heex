@@ -1,6 +1,6 @@
 <.header>
-  Chat room {@chat_room.id}
-  <:subtitle>This is a chat_room record from your database.</:subtitle>
+  Chat room {@chat_room.name}
+  <:subtitle>Welcome to the chat room!</:subtitle>
   <:actions>
     <.link patch={~p"/chat_rooms/#{@chat_room}/show/edit"} phx-click={JS.push_focus()}>
       <.button>Edit chat_room</.button>
@@ -8,9 +8,20 @@
   </:actions>
 </.header>
 
-<.list>
-  <:item title="Name">{@chat_room.name}</:item>
-</.list>
+<div id="chat-box" class="border p-4 h-64 overflow-y-scroll">
+  <%= for message <- @messages do %>
+    <p>
+      <strong><%= message.sender_name || (message.user && message.user.email) || "Anonymous" %>:</strong> <%= message.content %>
+    </p>
+  <% end %>
+</div>
+
+<.simple_form for={@message_form} id="send-message-form" phx-submit="send_message">
+  <.input type="text" field={@message_form[:content]} placeholder="Enter your message" phx-debounce="100" />
+  <:actions>
+    <.button type="submit">Send</.button>
+  </:actions>
+</.simple_form>
 
 <.back navigate={~p"/chat_rooms"}>Back to chat_rooms</.back>
 
