@@ -4,10 +4,11 @@
 
 - The basic Elixir/Phoenix project structure is in place.
 - Core memory bank files have been initialized and updated with project details.
+- Basic User Authentication & Account Management setup using `phx.gen.auth` is complete, including user registration, email confirmation (via dev mailbox), and login/logout.
 
 ## What's Left to Build
 
-- User Authentication & Account Management.
+- Full integration of the authentication system into the application flow (e.g., protected routes).
 - Account Grouping/Invite System.
 - Chat Room Creation & Management.
 - Real-time Text Chat using Phoenix Channels.
@@ -17,13 +18,14 @@
 
 ## Current Status
 
-The project is in the initial setup phase. The foundational structure is ready, and the next steps involve implementing the core features defined in the MVP.
+The foundational authentication system is set up and verified. The project is ready to integrate authentication into the application flow and begin implementing other core MVP features.
 
 ## Known Issues
 
-- No known issues at this very early stage.
+- No known issues at this stage.
 
 ## Evolution of Project Decisions
 
 - Initial decision to use Elixir/Phoenix with LiveView and Channels for real-time PWA development.
 - Decision to integrate with a third-party LLM API for AI capabilities.
+- Decision to use `mix phx.gen.auth` for the core authentication system due to its comprehensive features.

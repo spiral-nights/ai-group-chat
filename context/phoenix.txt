@@ -1,0 +1,1110 @@
+These are code examples for the latest version of phoenix. It will help you understand how to use the library better.
+
+TITLE: Install phx.new archive from Hex (Elixir)
+DESCRIPTION: Use this command to install the latest version of the `phx.new` archive directly from the Hex package manager.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/installer/README.md#_snippet_0
+
+LANGUAGE: Elixir
+CODE:
+```
+$ mix archive.install hex phx_new
+```
+
+----------------------------------------
+
+TITLE: Defining Phoenix Router Module (Elixir)
+DESCRIPTION: Shows the basic structure of a Phoenix router module (`lib/hello_web/router.ex`). It includes defining browser and API pipelines using `plug` and setting up a root scope with a GET route for the home page, piping through the browser pipeline.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/routing.md#_snippet_0
+
+LANGUAGE: Elixir
+CODE:
+```
+defmodule HelloWeb.Router do
+  use HelloWeb, :router
+
+  pipeline :browser do
+    plug :accepts, ["html"]
+    plug :fetch_session
+    plug :fetch_live_flash
+    plug :put_root_layout, html: {HelloWeb.Layouts, :root}
+    plug :protect_from_forgery
+    plug :put_secure_browser_headers
+  end
+
+  pipeline :api do
+    plug :accepts, ["json"]
+  end
+
+  scope "/", HelloWeb do
+    pipe_through :browser
+
+    get "/", PageController, :home
+  end
+
+  # Other scopes may use custom stacks.
+  # scope "/api", HelloWeb do
+  #   pipe_through :api
+  # end
+
+  # ...
+end
+```
+
+----------------------------------------
+
+TITLE: Run Database Migrations with Ecto
+DESCRIPTION: Executes pending database migrations defined in the 'priv/repo/migrations' directory, creating the necessary table(s) for the generated resource (e.g., 'urls').
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/json_and_apis.md#_snippet_2
+
+LANGUAGE: console
+CODE:
+```
+$ mix ecto.migrate
+```
+
+----------------------------------------
+
+TITLE: Start Phoenix Server - IEx - Phoenix/Shell
+DESCRIPTION: Starts the Phoenix endpoint server within an interactive Elixir shell (IEx), allowing for runtime inspection and interaction.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/installer/templates/phx_single/README.md#_snippet_2
+
+LANGUAGE: Shell
+CODE:
+```
+iex -S mix phx.server
+```
+
+----------------------------------------
+
+TITLE: Start Phoenix Server with Mix (Elixir)
+DESCRIPTION: This command starts the Phoenix endpoint, compiling the project and launching the web server, making the application accessible.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/installer/templates/phx_umbrella/apps/app_name_web/README.md#_snippet_1
+
+LANGUAGE: Elixir
+CODE:
+```
+mix phx.server
+```
+
+----------------------------------------
+
+TITLE: Generating Authentication with Default Scope (Console)
+DESCRIPTION: Command line instruction to run the Phoenix authentication generator. This command automatically sets up user accounts and generates a default scope tied to the authenticated user, integrating it into the application.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/authn_authz/scopes.md#_snippet_0
+
+LANGUAGE: Console
+CODE:
+```
+$ mix phx.gen.auth Accounts User users
+```
+
+----------------------------------------
+
+TITLE: Generating User Authentication with mix phx.gen.auth (Console)
+DESCRIPTION: This command uses the Phoenix `mix phx.gen.auth` generator to scaffold a complete user authentication system. It creates necessary modules, migrations, and views for managing users, registration, login, and password resets, prompting the user to choose between LiveView or Controller-only implementation. It also provides instructions for fetching dependencies and running migrations.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/data_modelling/cross_context_boundaries.md#_snippet_0
+
+LANGUAGE: console
+CODE:
+```
+mix phx.gen.auth Accounts User users
+
+An authentication system can be created in two different ways:
+- Using Phoenix.LiveView (default)
+- Using Phoenix.Controller only
+Do you want to create a LiveView based authentication system? [Yn] n
+
+...
+* creating lib/hello/accounts/scope.ex
+...
+* injecting config/config.exs
+...
+
+Please re-fetch your dependencies with the following command:
+
+    $ mix deps.get
+
+Remember to update your repository by running migrations:
+
+    $ mix ecto.migrate
+
+Once you are ready, visit "/users/register"
+to create your account and then access "/dev/mailbox" to
+see the account confirmation email.
+```
+
+----------------------------------------
+
+TITLE: Defining Phoenix Function Component in Elixir
+DESCRIPTION: This Elixir code defines a function component named app within a module (presumably HelloWeb.Layouts). It accepts a single argument assigns and uses the ~H sigil to return a HEEx template string, serving as a reusable layout component.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/components.md#_snippet_1
+
+LANGUAGE: Elixir
+CODE:
+```
+  def app(assigns) do
+    ~H"""
+    <header class="navbar px-4 sm:px-6 lg:px-8">
+    ...
+"""
+  end
+```
+
+----------------------------------------
+
+TITLE: Run Database Migrations After Migration Modification - Phoenix
+DESCRIPTION: Executes pending database migrations using `mix ecto.migrate` after the `cart_items` migration file has been modified, confirming the successful application of the changes including the new indexes.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/data_modelling/cross_context_boundaries.md#_snippet_6
+
+LANGUAGE: Console
+CODE:
+```
+$ mix ecto.migrate
+
+16:59:51.941 [info] == Running 20250205203342 Hello.Repo.Migrations.CreateCarts.change/0 forward
+
+16:59:51.945 [info] create table carts
+
+16:59:51.952 [info] == Migrated 20250205203342 in 0.0s
+
+16:59:51.988 [info] == Running 20250205213410 Hello.Repo.Migrations.CreateCartItems.change/0 forward
+
+16:59:51.988 [info] create table cart_items
+
+16:59:52.000 [info] create index cart_items_product_id_index
+
+16:59:52.001 [info] create index cart_items_cart_id_product_id_index
+
+16:59:52.002 [info] == Migrated 20250205213410 in 0.0s
+```
+
+----------------------------------------
+
+TITLE: Defining GET Route in Phoenix Router (Elixir)
+DESCRIPTION: Demonstrates how to define a GET route in a Phoenix router using the `get` macro. It maps the root path ("/") to the `home` action of the `PageController` module.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/routing.md#_snippet_1
+
+LANGUAGE: Elixir
+CODE:
+```
+get "/", PageController, :home
+```
+
+----------------------------------------
+
+TITLE: Define Product Categories Join Table Schema (Ecto Migration)
+DESCRIPTION: Defines the `change` function within the generated migration file. It creates a `product_categories` table without a primary key, adds foreign key references to `products` and `categories` with `on_delete: :delete_all`, and creates indexes, including a unique index on the composite key to prevent duplicate associations.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/data_modelling/in_context_relationships.md#_snippet_2
+
+LANGUAGE: Elixir
+CODE:
+```
+defmodule Hello.Repo.Migrations.CreateProductCategories do
+  use Ecto.Migration
+
+  def change do
+    create table(:product_categories, primary_key: false) do
+      add :product_id, references(:products, on_delete: :delete_all)
+      add :category_id, references(:categories, on_delete: :delete_all)
+    end
+
+    create index(:product_categories, [:product_id])
+    create unique_index(:product_categories, [:category_id, :product_id])
+  end
+end
+```
+
+----------------------------------------
+
+TITLE: Creating a New Phoenix Project (Console)
+DESCRIPTION: Use the `mix phx.new` command followed by the desired project name to bootstrap a new Phoenix application. This command generates the basic directory structure and configuration files.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/introduction/up_and_running.md#_snippet_2
+
+LANGUAGE: console
+CODE:
+```
+$ mix phx.new hello
+```
+
+----------------------------------------
+
+TITLE: Generating Authentication System with mix phx.gen.auth (Console)
+DESCRIPTION: Runs the `mix phx.gen.auth` command to generate the authentication system files, specifying the context module (`Accounts`), schema module (`User`), and plural table name (`users`). Prompts the user to choose between LiveView and Controller-only implementation.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/authn_authz/mix_phx_gen_auth.md#_snippet_0
+
+LANGUAGE: Console
+CODE:
+```
+$ mix phx.gen.auth Accounts User users
+
+An authentication system can be created in two different ways:
+- Using Phoenix.LiveView (default)
+- Using Phoenix.Controller only
+
+Do you want to create a LiveView based authentication system? [Y/n] Y
+```
+
+----------------------------------------
+
+TITLE: Generating HTML Context and Web Files with mix phx.gen.html
+DESCRIPTION: This command uses the Phoenix generator `mix phx.gen.html` to create a new context module (`Catalog`), an Ecto schema (`Product`), and associated web files (controllers, templates) for a 'products' resource with specified fields (title, description, price, views). It outputs a list of files created and instructions for next steps.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/data_modelling/your_first_context.md#_snippet_0
+
+LANGUAGE: Shell
+CODE:
+```
+mix phx.gen.html Catalog Product products title:string \
+description:string price:decimal views:integer
+```
+
+----------------------------------------
+
+TITLE: Defining Ecto Changeset Function (Elixir)
+DESCRIPTION: Defines the initial `changeset/2` function for a `User` schema, using `cast/3` to select allowed fields from input parameters and `validate_required/3` to enforce that specific fields must be present and not blank.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/ecto.md#_snippet_8
+
+LANGUAGE: Elixir
+CODE:
+```
+def changeset(user, attrs) do
+  user
+  |> cast(attrs, [:name, :email, :bio, :number_of_pets])
+  |> validate_required([:name, :email, :bio, :number_of_pets])
+end
+```
+
+----------------------------------------
+
+TITLE: Generate Category Resource within Catalog Context (Phoenix)
+DESCRIPTION: Uses the `mix phx.gen.context` command to generate a new `Category` resource schema, migration, and context functions within the existing `Catalog` context. It specifies a unique `title` field and uses the `--no-scope` flag.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/data_modelling/in_context_relationships.md#_snippet_0
+
+LANGUAGE: console
+CODE:
+```
+$ mix phx.gen.context Catalog Category categories \\
+title:string:unique --no-scope
+```
+
+----------------------------------------
+
+TITLE: Configuring Ecto Repository in dev.exs (Elixir)
+DESCRIPTION: Elixir configuration snippet from `config/dev.exs` demonstrating how to configure the `Hello.Repo` module with specific database connection parameters for the development environment, including username, password, hostname, database name, and connection pool size.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/ecto.md#_snippet_6
+
+LANGUAGE: Elixir
+CODE:
+```
+...
+# Configure your database
+config :hello, Hello.Repo,
+  username: "postgres",
+  password: "postgres",
+  hostname: "localhost",
+  database: "hello_dev",
+  show_sensitive_data_on_connection_error: true,
+  pool_size: 10
+...
+```
+
+----------------------------------------
+
+TITLE: Creating and Inspecting Initial Invalid Changeset (Elixir)
+DESCRIPTION: Demonstrates creating a changeset for a new `User` with empty parameters (`%{}`) using the initial `changeset/2` function, and then inspecting the resulting changeset's validity (`valid?`) and the list of validation errors (`errors`).
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/ecto.md#_snippet_10
+
+LANGUAGE: Elixir
+CODE:
+```
+iex> changeset = User.changeset(%User{}, %{})
+```
+
+LANGUAGE: Elixir
+CODE:
+```
+iex> changeset.valid?
+```
+
+LANGUAGE: Elixir
+CODE:
+```
+iex> changeset.errors
+```
+
+----------------------------------------
+
+TITLE: Adding a Module Plug to a Phoenix Router Pipeline
+DESCRIPTION: Demonstrates how to integrate the custom `HelloWeb.Plugs.Locale` module plug into the default `:browser` pipeline within the Phoenix router. The plug is added with a default argument ('en') which is passed to its `init/1` function.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/plug.md#_snippet_3
+
+LANGUAGE: Elixir
+CODE:
+```
+defmodule HelloWeb.Router do
+  use HelloWeb, :router
+
+  pipeline :browser do
+    plug :accepts, ["html"]
+    plug :fetch_session
+    plug :fetch_live_flash
+    plug :put_root_layout, html: {HelloWeb.LayoutView, :root}
+    plug :protect_from_forgery
+    plug :put_secure_browser_headers
+    plug HelloWeb.Plugs.Locale, "en"
+  end
+  ...
+```
+
+----------------------------------------
+
+TITLE: Implementing Article Create Action (Elixir)
+DESCRIPTION: Defines the `create` action for articles in a Phoenix controller. It attempts to create an article using `News.create_article/1`. If successful, it sets the status to 201, adds a location header, and renders the `show` view. It uses the `with` form for the success path and relies on `action_fallback` for errors.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/testing/testing_controllers.md#_snippet_15
+
+LANGUAGE: Elixir
+CODE:
+```
+def create(conn, %{"article" => article_params}) do
+  with {:ok, %Article{} = article} <- News.create_article(article_params) do
+    conn
+    |> put_status(:created)
+    |> put_resp_header("location", ~p"/api/articles/#{article}")
+    |> render(:show, article: article)
+  end
+end
+```
+
+----------------------------------------
+
+TITLE: Creating a New Phoenix Project
+DESCRIPTION: Command to generate a new Phoenix application using the `mix phx.new` task. This is a typical first step when starting a new project or needing a simple app to deploy.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/deployment/fly.md#_snippet_0
+
+LANGUAGE: console
+CODE:
+```
+$ mix phx.new my_app
+```
+
+----------------------------------------
+
+TITLE: Looping with for in HEEx
+DESCRIPTION: Shows how to use the <%= for ... %> block in HEEx templates to iterate over a collection (a range 1..10 in this case) and generate HTML rows dynamically. It demonstrates interpolating loop variables (number) within the loop body.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/components.md#_snippet_7
+
+LANGUAGE: HEEx
+CODE:
+```
+<table>
+  <tr>
+    <th>Number</th>
+    <th>Power</th>
+  </tr>
+  <%= for number <- 1..10 do %>
+    <tr>
+      <td>{number}</td>
+      <td>{number * number}</td>
+    </tr>
+  <% end %>
+</table>
+```
+
+----------------------------------------
+
+TITLE: Defining Standard Resource Routes in Phoenix Router (Elixir)
+DESCRIPTION: Demonstrates how to define a standard set of RESTful routes for a resource (users) using the `resources` macro within a Phoenix router scope. This macro automatically generates routes for common CRUD operations.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/routing.md#_snippet_3
+
+LANGUAGE: Elixir
+CODE:
+```
+scope "/", HelloWeb do
+  pipe_through :browser
+
+  get "/", PageController, :home
+  resources "/users", UserController
+  ...
+end
+```
+
+----------------------------------------
+
+TITLE: Viewing Phoenix Project Directory Structure (Console)
+DESCRIPTION: This snippet shows the default directory structure generated by the `mix phx.new` command for a new Phoenix application. It outlines the main directories like `_build`, `assets`, `config`, `deps`, `lib`, `priv`, and `test`, which organize compilation artifacts, frontend sources, configuration, dependencies, application code, resources, and tests respectively.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/directory_structure.md#_snippet_0
+
+LANGUAGE: console
+CODE:
+```
+├── _build
+├── assets
+├── config
+├── deps
+├── lib
+│   ├── hello
+│   ├── hello.ex
+│   ├── hello_web
+│   └── hello_web.ex
+├── priv
+└── test
+```
+
+----------------------------------------
+
+TITLE: Creating a Phoenix Project (macOS/Ubuntu) - Bash
+DESCRIPTION: Uses curl to download and execute a script from new.phoenixframework.org to create a new Phoenix project named 'hello' on macOS or Ubuntu.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/data_modelling/contexts.md#_snippet_0
+
+LANGUAGE: bash
+CODE:
+```
+curl https://new.phoenixframework.org/hello | sh
+```
+
+----------------------------------------
+
+TITLE: Install and Setup Dependencies - Phoenix/Shell
+DESCRIPTION: Runs the mix setup task to install project dependencies and perform necessary setup steps for a Phoenix application.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/installer/templates/phx_single/README.md#_snippet_0
+
+LANGUAGE: Shell
+CODE:
+```
+mix setup
+```
+
+----------------------------------------
+
+TITLE: Elixir Release Commands for Migrations
+DESCRIPTION: Defines an Elixir module `MyApp.Release` with functions `migrate` and `rollback` to handle Ecto database migrations directly within a production release. It loads the application and iterates through configured repositories to apply or rollback migrations using `Ecto.Migrator`. Includes helper functions `repos` and `load_app`.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/deployment/releases.md#_snippet_5
+
+LANGUAGE: Elixir
+CODE:
+```
+defmodule MyApp.Release do
+  @app :my_app
+
+  def migrate do
+    load_app()
+
+    for repo <- repos() do
+      {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
+    end
+  end
+
+  def rollback(repo, version) do
+    load_app()
+    {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :down, to: version))
+  end
+
+  defp repos do
+    Application.fetch_env!(@app, :ecto_repos)
+  end
+
+  defp load_app do
+    Application.ensure_all_started(:ssl)
+    Application.ensure_loaded(@app)
+  end
+end
+```
+
+----------------------------------------
+
+TITLE: Implementing API Token Verification Query in Elixir UserToken Module
+DESCRIPTION: Adds the `verify_api_token_query/1` function to the `MyApp.Accounts.UserToken` module. This function decodes and hashes the provided token, then constructs an Ecto query to find a matching token record associated with a user, ensuring the token is within its validity period (365 days) and the user's email hasn't changed. It returns `{:ok, query}` or `:error`.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/authn_authz/api_authentication.md#_snippet_3
+
+LANGUAGE: Elixir
+CODE:
+```
+  @doc """
+  Checks if the API token is valid and returns its underlying lookup query.
+
+  The query returns the user found by the token, if any.
+
+  The given token is valid if it matches its hashed counterpart in the
+  database and the user email has not changed. This function also checks
+  if the token is being used within 365 days.
+  """
+  def verify_api_token_query(token) do
+    case Base.url_decode64(token, padding: false) do
+      {:ok, decoded_token} ->
+        hashed_token = :crypto.hash(@hash_algorithm, decoded_token)
+
+        query =
+          from token in by_token_and_context_query(hashed_token, "api-token"),
+            join: user in assoc(token, :user),
+            where:
+              token.inserted_at > ago(^@api_token_validity_in_days, "day") and
+                token.sent_to == user.email,
+            select: user
+
+        {:ok, query}
+
+      :error ->
+        :error
+    end
+  end
+```
+
+----------------------------------------
+
+TITLE: Handling Incoming Channel Events in Phoenix Elixir
+DESCRIPTION: Explains how to use `handle_in/3` in a Phoenix Channel to process incoming client events, specifically showing how to handle a "new_msg" event and broadcast it to other subscribers using `broadcast!/3`. It also includes basic `join/3` implementations.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/real_time/channels.md#_snippet_10
+
+LANGUAGE: elixir
+CODE:
+```
+defmodule HelloWeb.RoomChannel do
+  use Phoenix.Channel
+
+  def join("room:lobby", _message, socket) do
+    {:ok, socket}
+  end
+
+  def join("room:" <> _private_room_id, _params, _socket) do
+    {:error, %{reason: "unauthorized"}}
+  end
+
+  def handle_in("new_msg", %{"body" => body}, socket) do
+    broadcast!(socket, "new_msg", %{body: body})
+    {:noreply, socket}
+  end
+end
+```
+
+----------------------------------------
+
+TITLE: Defining Post Changeset with Validations (Elixir)
+DESCRIPTION: This Elixir function defines a changeset for a post, used for casting and validating attributes before database operations. It casts the `:title` and `:body` fields, requires both fields to be present, and validates that the `:title` has a minimum length of 2 characters. This function is typically used within a context module.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/testing/testing_controllers.md#_snippet_6
+
+LANGUAGE: Elixir
+CODE:
+```
+def changeset(post, attrs) do
+  post
+  |> cast(attrs, [:title, :body])
+  |> validate_required([:title, :body])
+  |> validate_length(:title, min: 2)
+end
+```
+
+----------------------------------------
+
+TITLE: Installing Phoenix Application Generator (Console)
+DESCRIPTION: This command uses the Elixir build tool `mix` and the package manager `hex` to install the `phx_new` archive. This archive contains the generator used to create new Phoenix projects.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/introduction/installation.md#_snippet_1
+
+LANGUAGE: console
+CODE:
+```
+$ mix archive.install hex phx_new
+```
+
+----------------------------------------
+
+TITLE: Starting Phoenix Server in Production (Console)
+DESCRIPTION: Command to start the Phoenix server in production mode, specifying the port and environment variables. This is the standard way to run the application in a production setting.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/deployment/deployment.md#_snippet_4
+
+LANGUAGE: console
+CODE:
+```
+$ PORT=4001 MIX_ENV=prod mix phx.server
+10:59:19.136 [info] Running MyAppWeb.Endpoint with Cowboy on http://example.com
+```
+
+----------------------------------------
+
+TITLE: Implementing a Basic Phoenix LiveView (Elixir)
+DESCRIPTION: Defines a simple Phoenix LiveView module demonstrating the core lifecycle callbacks: `mount/3` for initialization, `render/1` for template rendering using HEEx, and `handle_event/3` for responding to client interactions.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/live_view.md#_snippet_0
+
+LANGUAGE: Elixir
+CODE:
+```
+defmodule MyAppWeb.ThermostatLive do
+  use MyAppWeb, :live_view
+
+  def render(assigns) do
+    ~H"""
+    Current temperature: {@temperature}°F
+    <button phx-click="inc_temperature">+</button>
+    """
+  end
+
+  def mount(_params, _session, socket) do
+    temperature = 70 # Let's assume a fixed temperature for now
+    {:ok, assign(socket, :temperature, temperature)}
+  end
+
+  def handle_event("inc_temperature", _params, socket) do
+    {:noreply, update(socket, :temperature, &(&1 + 1))}
+  end
+end
+```
+
+----------------------------------------
+
+TITLE: Rendering with Phoenix View (Elixir)
+DESCRIPTION: Illustrates the standard way to render responses in Phoenix using the `render/3` function, which delegates rendering to a corresponding view module and template. It passes assigns as a keyword list. Requires a matching view module and template file.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/controllers.md#_snippet_8
+
+LANGUAGE: Elixir
+CODE:
+```
+defmodule HelloWeb.HelloController do
+  use HelloWeb, :controller
+
+  def show(conn, %{"messenger" => messenger}) do
+    render(conn, :show, messenger: messenger)
+  end
+end
+```
+
+----------------------------------------
+
+TITLE: Connecting Phoenix LiveView Client (JavaScript)
+DESCRIPTION: Initializes the Phoenix Socket and LiveSocket in the client-side JavaScript application, establishing a WebSocket connection to the server for real-time LiveView communication and updates.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/live_view.md#_snippet_2
+
+LANGUAGE: JavaScript
+CODE:
+```
+import {Socket} from "phoenix"
+import {LiveSocket} from "phoenix_live_view"
+
+let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
+let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}})
+liveSocket.connect()
+```
+
+----------------------------------------
+
+TITLE: Install Dependencies (Elixir/Shell)
+DESCRIPTION: Installs project dependencies using the Elixir Mix build tool, as defined in the mix.exs file.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/integration_test/README.md#_snippet_0
+
+LANGUAGE: Shell
+CODE:
+```
+$ mix deps.get
+```
+
+----------------------------------------
+
+TITLE: Implementing the index Controller Action (Elixir)
+DESCRIPTION: This Elixir function defines the `index` action for a Phoenix controller. It retrieves all posts using `Blog.list_posts()` and renders the "index.html" template, passing the retrieved posts to the template.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/testing/testing_controllers.md#_snippet_2
+
+LANGUAGE: Elixir
+CODE:
+```
+def index(conn, _params) do
+  posts = Blog.list_posts()
+  render(conn, :index, posts: posts)
+end
+```
+
+----------------------------------------
+
+TITLE: Running Database Migrations after mix phx.gen.auth (Console)
+DESCRIPTION: Executes the database migrations generated by `mix phx.gen.auth` to create the necessary tables (e.g., `users`).
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/authn_authz/mix_phx_gen_auth.md#_snippet_2
+
+LANGUAGE: Console
+CODE:
+```
+$ mix ecto.migrate
+```
+
+----------------------------------------
+
+TITLE: Testing Article Index JSON Response in Phoenix (Elixir)
+DESCRIPTION: A test case for the article index action. It performs a GET request to the `/api/articles` path and asserts that the response is JSON with a 200 status code and contains a `data` key with an empty list, indicating no articles are present initially.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/testing/testing_controllers.md#_snippet_14
+
+LANGUAGE: Elixir
+CODE:
+```
+describe "index" do
+  test "lists all articles", %{conn: conn} do
+    conn = get(conn, ~p"/api/articles")
+    assert json_response(conn, 200)["data"] == []
+  end
+end
+```
+
+----------------------------------------
+
+TITLE: Building Production Phoenix Release - Shell
+DESCRIPTION: Invokes the `mix release` task with `MIX_ENV=prod` to assemble the self-contained application release package, including the Erlang VM, Elixir, code, and dependencies, into the `_build/prod/rel` directory.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/deployment/releases.md#_snippet_3
+
+LANGUAGE: console
+CODE:
+```
+$ MIX_ENV=prod mix release
+Generated my_app app
+* assembling my_app-0.1.0 on MIX_ENV=prod
+* using config/runtime.exs to configure the release at runtime
+
+Release created at _build/prod/rel/my_app!
+
+    # To start your system
+    _build/prod/rel/my_app/bin/my_app start
+
+...
+```
+
+----------------------------------------
+
+TITLE: Interpolating Attributes and Body in HEEx
+DESCRIPTION: Demonstrates the standard syntax for interpolating Elixir values into HTML attributes (class={@class}) and element bodies (<p>Hello {@username}</p>) using the {...} syntax. It notes HEEx's handling of special attribute values like false.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/components.md#_snippet_10
+
+LANGUAGE: HEEx
+CODE:
+```
+<div title="My div" class={@class}>
+  <p>Hello {@username}</p>
+</div>
+```
+
+----------------------------------------
+
+TITLE: Defining Function Component with Attributes in Phoenix HTML Module
+DESCRIPTION: This Elixir module defines the HelloWeb.HelloHTML module, including the greet/1 function component. It uses attr/3 to declare a required :messenger attribute of type :string and defines the component function using the ~H sigil to render a greeting based on the attribute value.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/components.md#_snippet_3
+
+LANGUAGE: Elixir
+CODE:
+```
+defmodule HelloWeb.HelloHTML do
+  use HelloWeb, :html
+
+  embed_templates "hello_html/*"
+
+  attr :messenger, :string, required: true
+
+  def greet(assigns) do
+    ~H"""
+    <h2>Hello World, from {@messenger}!</h2>
+    """
+  end
+end
+```
+
+----------------------------------------
+
+TITLE: Defining Product Catalog Context and Listing Products in Elixir
+DESCRIPTION: This snippet presents the `Hello.Catalog` module, which serves as the public API for product-related business logic. It includes the `list_products/0` function, demonstrating how the context encapsulates data access details (using `Repo.all(Product)`) away from callers like the controller, promoting clear intent and encapsulation.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/data_modelling/your_first_context.md#_snippet_6
+
+LANGUAGE: Elixir
+CODE:
+```
+defmodule Hello.Catalog do
+  @moduledoc """
+  The Catalog context.
+  """
+
+  import Ecto.Query, warn: false
+  alias Hello.Repo
+
+  alias Hello.Catalog.Product
+
+  @doc """
+  Returns the list of products.
+
+  ## Examples
+
+      iex> list_products()
+      [%Product{}, ...]
+
+  """
+  def list_products do
+    Repo.all(Product)
+  end
+  ...
+end
+```
+
+----------------------------------------
+
+TITLE: Handling Dynamic Route Parameter in Phoenix Controller (Elixir)
+DESCRIPTION: Shows a controller action (`show`) that receives the connection (`conn`) and pattern matches on the parameters map to extract a specific dynamic segment (`messenger`). The extracted value is then passed to the `render` function.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/request_lifecycle.md#_snippet_11
+
+LANGUAGE: Elixir
+CODE:
+```
+def show(conn, %{"messenger" => messenger}) do
+  render(conn, :show, messenger: messenger)
+end
+```
+
+----------------------------------------
+
+TITLE: Defining the Ecto Repository Module (Elixir)
+DESCRIPTION: Elixir code defining the `Hello.Repo` module, which serves as the application's database repository. It uses `Ecto.Repo` and is configured with the application's OTP name (`:hello`) and the specific database adapter (`Ecto.Adapters.Postgres`).
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/ecto.md#_snippet_5
+
+LANGUAGE: Elixir
+CODE:
+```
+defmodule Hello.Repo do
+  use Ecto.Repo,
+    otp_app: :hello,
+    adapter: Ecto.Adapters.Postgres
+end
+```
+
+----------------------------------------
+
+TITLE: Generate Ecto Migration File - Console
+DESCRIPTION: Use the `mix ecto.gen.migration` task to create a new migration file. The name should be descriptive and in snake_case.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/ecto.md#_snippet_30
+
+LANGUAGE: Console
+CODE:
+```
+$ mix ecto.gen.migration add_comments_table
+* creating priv/repo/migrations
+* creating priv/repo/migrations/20150318001628_add_comments_table.exs
+```
+
+----------------------------------------
+
+TITLE: Organizing Phoenix Routes with Pipelines and Scopes (Elixir)
+DESCRIPTION: Demonstrates how to define pipelines (`:browser`, `:auth`) and use scopes (`scope "/"`) with `pipe_through` to group routes based on required functionality, such as authentication. Shows how routes requiring authentication are placed in a scope with the `:auth` pipeline, while others are in a scope with just the `:browser` pipeline.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/routing.md#_snippet_28
+
+LANGUAGE: Elixir
+CODE:
+```
+pipeline :browser do
+  ...
+end
+
+pipeline :auth do
+  plug HelloWeb.Authentication
+end
+
+scope "/" do
+  pipe_through [:browser]
+
+  get "/reviews", PostController, :index
+  get "/reviews/:id", PostController, :show
+end
+
+scope "/" do
+  pipe_through [:browser, :auth]
+
+  get "/reviews/new", PostController, :new
+  post "/reviews", PostController, :create
+end
+```
+
+----------------------------------------
+
+TITLE: Running Ecto Migrations (Console)
+DESCRIPTION: Executes the pending database migrations using the `mix ecto.migrate` task to apply the schema changes defined in the generated migration file, creating the corresponding database table.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/ecto.md#_snippet_1
+
+LANGUAGE: console
+CODE:
+```
+$ mix ecto.migrate
+```
+
+----------------------------------------
+
+TITLE: Defining Phoenix Endpoint Plugs (Elixir)
+DESCRIPTION: Illustrates the basic structure of a Phoenix endpoint module, showing how various Plug modules are composed to handle initial request processing before routing. Each plug performs a specific task in the request pipeline.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/request_lifecycle.md#_snippet_9
+
+LANGUAGE: Elixir
+CODE:
+```
+defmodule HelloWeb.Endpoint do
+  use Phoenix.Endpoint, otp_app: :hello
+
+  plug Plug.Static, ...
+  plug Plug.RequestId
+  plug Plug.Telemetry, ...
+  plug Plug.Parsers, ...
+  plug Plug.MethodOverride
+  plug Plug.Head
+  plug Plug.Session, ...
+  plug HelloWeb.Router
+end
+```
+
+----------------------------------------
+
+TITLE: Mapping Root Route - Phoenix Router - Elixir
+DESCRIPTION: Defines a route in the Phoenix router that handles GET requests to the root path ("/"). It directs these requests to the home/2 action within the HelloWeb.PageController module. This is the default route for the application's home page.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/request_lifecycle.md#_snippet_0
+
+LANGUAGE: Elixir
+CODE:
+```
+get "/", PageController, :home
+```
+
+----------------------------------------
+
+TITLE: Build Docker Image for Phoenix Release
+DESCRIPTION: This Dockerfile defines the final stage for a multi-stage build, starting from a runner image. It installs necessary runtime dependencies, sets the locale and environment variables, copies the compiled Phoenix release from a previous build stage, and sets the working directory and user. It prepares the image to run the compiled application.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/deployment/releases.md#_snippet_9
+
+LANGUAGE: Dockerfile
+CODE:
+```
+FROM ${RUNNER_IMAGE}
+
+RUN apt-get update && \
+  apt-get install -y --no-install-recommends libstdc++6 openssl libncurses5 locales ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
+# Set the locale
+RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
+
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
+
+WORKDIR "/app"
+RUN chown nobody /app
+
+# set runner ENV
+ENV MIX_ENV="prod"
+
+# Only copy the final release from the build stage
+COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/my_app ./
+
+USER nobody
+
+# If using an environment that doesn't automatically reap zombie processes, it is
+# advised to add an init process such as tini via `apt-get install`
+# above and adding an entrypoint. See https://github.com/krallin/tini for details
+# ENTRYPOINT ["/tini", "--"]
+
+CMD ["/app/bin/server"]
+```
+
+----------------------------------------
+
+TITLE: Executing Elixir Release Command via Eval
+DESCRIPTION: Demonstrates how to run a specific function (`MyApp.Release.migrate`) within the production release using the `eval` command provided by the generated release script. This allows executing custom Elixir code in the production environment.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/deployment/releases.md#_snippet_6
+
+LANGUAGE: Console
+CODE:
+```
+$ _build/prod/rel/my_app/bin/my_app eval "MyApp.Release.migrate"
+```
+
+----------------------------------------
+
+TITLE: Using Local Function Component in HEEx Template
+DESCRIPTION: This updated HEEx template demonstrates invoking a locally defined function component, <.greet>, within the same module's template. It passes the @messenger assign as the required messenger attribute to the component.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/components.md#_snippet_4
+
+LANGUAGE: HEEx
+CODE:
+```
+<Layouts.app flash={@flash}>
+  <section>
+    <.greet messenger={@messenger} />
+  </section>
+</Layouts.app>
+```
+
+----------------------------------------
+
+TITLE: Configuring Phoenix Socket in Endpoint (Elixir)
+DESCRIPTION: Configures a socket endpoint in the Phoenix application's Endpoint module. It maps the "/socket" URL path to the `HelloWeb.UserSocket` handler and specifies the enabled transports (websocket and longpoll).
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/real_time/channels.md#_snippet_1
+
+LANGUAGE: Elixir
+CODE:
+```
+socket "/socket", HelloWeb.UserSocket,
+  websocket: true,
+  longpoll: false
+```
+
+----------------------------------------
+
+TITLE: Running Production Phoenix Release - Shell
+DESCRIPTION: Provides example commands to start the assembled production release or specifically boot the web server using the generated executable script within the release directory.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/deployment/releases.md#_snippet_4
+
+LANGUAGE: console
+CODE:
+```
+_build/prod/rel/my_app/bin/my_app start
+```
+
+LANGUAGE: console
+CODE:
+```
+_build/prod/rel/my_app/bin/server
+```
+
+----------------------------------------
+
+TITLE: Implementing Create Action in Phoenix Controller (Elixir)
+DESCRIPTION: This Elixir function defines the `create` action for a Phoenix controller. It attempts to create a post using `Blog.create_post` with provided parameters. On success (`{:ok, post}`), it sets a flash message and redirects to the post's show page. On failure (`{:error, %Ecto.Changeset{}}`), it re-renders the 'new' template, passing the changeset for displaying errors.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/testing/testing_controllers.md#_snippet_4
+
+LANGUAGE: Elixir
+CODE:
+```
+def create(conn, %{"post" => post_params}) do
+  case Blog.create_post(post_params) do
+    {:ok, post} ->
+      conn
+      |> put_flash(:info, "Post created successfully.")
+      |> redirect(to: ~p"/posts/#{post}")
+
+    {:error, %Ecto.Changeset{} = changeset} ->
+      render(conn, :new, changeset: changeset)
+  end
+end
+```
+
+----------------------------------------
+
+TITLE: Initial Ecto Migration File Structure - Elixir
+DESCRIPTION: This is the default structure of a migration file generated by `mix ecto.gen.migration`. It includes a `change/0` function where schema modifications are defined.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/ecto.md#_snippet_31
+
+LANGUAGE: Elixir
+CODE:
+```
+defmodule Hello.Repo.Migrations.AddCommentsTable do
+  use Ecto.Migration
+
+  def change do
+  end
+end
+```
+
+----------------------------------------
+
+TITLE: Creating the Database with mix ecto.create (Console)
+DESCRIPTION: Shows the successful execution of the `mix ecto.create` Mix task. This task creates the database specified in the application's repository configuration, typically `Hello.Repo` by default.
+SOURCE: https://github.com/phoenixframework/phoenix/blob/main/guides/ecto.md#_snippet_24
+
+LANGUAGE: Console
+CODE:
+```
+$ mix ecto.create
+The database for Hello.Repo has been created.
+```
