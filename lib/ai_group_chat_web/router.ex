@@ -73,8 +73,16 @@ defmodule AiGroupChatWeb.Router do
       live "/chat_rooms/new", ChatRoomLive.Index, :new
       live "/chat_rooms/:id/edit", ChatRoomLive.Index, :edit
 
-      live "/chat_rooms/:id", ChatRoomLive.Show, :show
+      # allow anyone to join chat room
       live "/chat_rooms/:id/show/edit", ChatRoomLive.Show, :edit
+    end
+  end
+
+  scope "/", AiGroupChatWeb do
+    pipe_through [:browser]
+
+    live_session :guest_user, on_mount: [{AiGroupChatWeb.UserAuth, :mount_current_user}] do
+      live "/chat_rooms/:id", ChatRoomLive.Show, :show
     end
   end
 

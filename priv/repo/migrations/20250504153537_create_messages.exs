@@ -2,17 +2,15 @@ defmodule AiGroupChat.Repo.Migrations.CreateMessages do
   use Ecto.Migration
 
   def change do
-    create table(:messages, primary_key: false) do
-      add :id, :uuid, primary_key: true
+    create table(:messages) do # Use default primary key (bigint)
       add :content, :string, null: false
-      add :sender_name, :string
-      add :user_id, references(:users, type: :uuid, on_delete: :nothing)
-      add :chat_room_id, references(:chat_rooms, type: :uuid, on_delete: :nothing), null: false
+      add :participant_id, references(:participants, type: :binary_id, on_delete: :nothing), null: false
+      add :chat_room_id, references(:chat_rooms, type: :binary_id, on_delete: :nothing), null: false
 
       timestamps()
     end
 
+    create index(:messages, [:participant_id])
     create index(:messages, [:chat_room_id])
-    create index(:messages, [:user_id])
   end
 end

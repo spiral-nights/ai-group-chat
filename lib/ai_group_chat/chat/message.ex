@@ -4,8 +4,7 @@ defmodule AiGroupChat.Chat.Message do
 
   schema "messages" do
     field :content, :string
-    field :sender_name, :string
-    belongs_to :user, AiGroupChat.Accounts.User, foreign_key: :user_id
+    belongs_to :participant, AiGroupChat.Chat.Participant, type: :binary_id
     belongs_to :chat_room, AiGroupChat.Chat.ChatRoom, type: :binary_id
 
     timestamps()
@@ -14,17 +13,7 @@ defmodule AiGroupChat.Chat.Message do
   @doc false
   def changeset(message, attrs) do
     message
-    |> cast(attrs, [:content, :sender_name, :user_id, :chat_room_id])
-    |> validate_required([:content, :chat_room_id])
-    |> validate_inclusion(:user_id, [nil], message: "must be nil for anonymous users")
-    |> validate_required_when(:sender_name, :user_id, nil) # Require sender_name if user_id is nil
-  end
-
-  defp validate_required_when(changeset, field, other_field, value) do
-    if get_change(changeset, other_field) == value do
-      validate_required(changeset, [field])
-    else
-      changeset
-    end
+    |> cast(attrs, [:content, :participant_id, :chat_room_id])
+    |> validate_required([:content, :participant_id, :chat_room_id])
   end
 end

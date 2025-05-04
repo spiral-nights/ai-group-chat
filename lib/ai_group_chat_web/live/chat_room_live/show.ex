@@ -10,12 +10,54 @@ defmodule AiGroupChatWeb.ChatRoomLive.Show do
     messages = Chat.list_messages_by_room(chat_room.id)
     topic = "chat_room:#{chat_room.id}"
 
-    changeset = Message.changeset(%Message{}, %{})
-    message_form = Phoenix.Component.to_form(changeset)
+    # Handle participant creation/lookup
+    user = get_in(socket.assigns, [:current_user]) || nil
+
+    participant =
+      if connected?(socket) do
+        if user do
+          # Find or create participant for registered user
+          case Chat.find_or_create_participant_for_user(chat_room.id, user.id) do
+            {:ok, participant} ->
+              participant
+
+            # Handle error appropriately
+            {:error, _} ->
+              nil
+          end
+        else
+          # Find or create participant for anonymous user (based on session or other identifier)
+          # This is a placeholder and needs a proper implementation for anonymous user identification
+          # Using socket.id as a temporary identifier
+          IO.puts("in anon block")
+          case Chat.find_or_create_participant_for_anonymous(chat_room.id) do
+            {:ok, participant} -> participant
+            # Handle error appropriately
+            {:error, error} ->
+              IO.inspect(error, label: "error is")
+              nil
+          end
+        end
+      else
+        # No participant for now -- wait until socket connection
+        nil
+      end
+
+    IO.inspect(participant, label: "participant is")
 
     if connected?(socket), do: Phoenix.PubSub.subscribe(AiGroupChat.PubSub, topic)
-    IO.inspect(messages, label: "\n\n\n\nMessages")
-    {:ok, assign(socket, chat_room: chat_room, messages: messages, message_form: message_form)}
+
+    # Add the structure for the new message
+    changeset = Message.changeset(%Message{}, %{})
+    message_form = empty_message_form()
+
+    {:ok,
+     assign(socket,
+       chat_room: chat_room,
+       messages: messages,
+       message_form: message_form,
+       participant: participant
+     )}
   end
 
   @impl true
@@ -34,30 +76,24 @@ defmodule AiGroupChatWeb.ChatRoomLive.Show do
   @impl true
   def handle_event("send_message", %{"message" => %{"content" => content}}, socket) do
     chat_room = socket.assigns.chat_room
-    # Assuming current_user is assigned to the socket for authenticated users
-    user = socket.assigns.current_user
+    # Assuming participant is assigned to the socket
+    participant = socket.assigns.participant
+
+    IO.inspect(participant, label: "participant")
 
     message_attrs = %{
       content: content,
-      chat_room_id: chat_room.id
+      chat_room_id: chat_room.id,
+      participant_id: participant.id
     }
-
-    message_attrs =
-      if user do
-        Map.put(message_attrs, :user_id, user.id)
-      else
-        # For anonymous users, we need a way to get their name.
-        # This assumes a "sender_name" field is present in the form or socket assigns.
-        # For now, we'll use a placeholder or assume it's in assigns.
-        # A more robust solution would involve prompting the user for a name on join.
-        Map.put(message_attrs, :sender_name, socket.assigns[:sender_name] || "Anonymous")
-      end
 
     case Chat.create_message(message_attrs) do
       {:ok, message} ->
         topic = "chat_room:#{chat_room.id}"
+        # Preload participant and user before broadcasting
+        message = AiGroupChat.Repo.preload(message, participant: [:user])
         Phoenix.PubSub.broadcast(AiGroupChat.PubSub, topic, {:new_message, message})
-        {:noreply, assign(socket, :message_content, "")}
+        {:noreply, assign(socket, message_form: empty_message_form())}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         # Handle errors, e.g., display validation messages
@@ -67,4 +103,6 @@ defmodule AiGroupChatWeb.ChatRoomLive.Show do
 
   defp page_title(:show), do: "Show Chat room"
   defp page_title(:edit), do: "Edit Chat room"
+
+  defp empty_message_form(), do: to_form(Message.changeset(%Message{}, %{}))
 end

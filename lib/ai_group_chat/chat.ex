@@ -103,15 +103,51 @@ defmodule AiGroupChat.Chat do
     ChatRoom.changeset(chat_room, attrs)
   end
 
+  alias AiGroupChat.Chat.Participant
+
+  @doc """
+  Returns the list of participants for a chat room.
+  """
+  def list_participants_by_room(chat_room_id) do
+    Repo.all(
+      from p in Participant,
+        where: p.chat_room_id == ^chat_room_id
+    )
+  end
+
+  @doc """
+  Gets a single participant.
+
+  Raises `Ecto.NoResultsError` if the Participant does not exist.
+  """
+  def get_participant!(id), do: Repo.get!(Participant, id)
+
+  @doc """
+  Creates a participant.
+
+  ## Examples
+
+      iex> create_participant(%{ chat_room_id: chat_room.id, user_id: user.id })
+      {:ok, %Participant{}}
+
+      iex> create_participant(%{ chat_room_id: chat_room.id, display_name: "Guest" })
+      {:ok, %Participant{}}
+
+      iex> create_participant(%{ chat_room_id: chat_room.id })
+      {:error, %Ecto.Changeset{}}
+  """
+  def create_participant(attrs \\ %{}) do
+    %Participant{}
+    |> Participant.changeset(attrs)
+    |> Repo.insert()
+  end
+
   @doc """
   Creates a message.
 
   ## Examples
 
-      iex> create_message(%{ content: "Hello", chat_room_id: chat_room.id, user_id: user.id })
-      {:ok, %Message{}}
-
-      iex> create_message(%{ content: "Hi", chat_room_id: chat_room.id, sender_name: "Guest" })
+      iex> create_message(%{ content: "Hello", chat_room_id: chat_room.id, participant_id: participant.id })
       {:ok, %Message{}}
 
       iex> create_message(%{ content: "Bad message" })
@@ -124,13 +160,64 @@ defmodule AiGroupChat.Chat do
   end
 
   @doc """
-  Returns the list of messages for a chat room.
+  Returns the list of messages for a chat room, preloading participants and their users.
   """
   def list_messages_by_room(chat_room_id) do
     Repo.all(
       from m in Message,
+        join: p in assoc(m, :participant),
+        left_join: u in assoc(p, :user),
         where: m.chat_room_id == ^chat_room_id,
-        order_by: m.inserted_at
+        order_by: m.inserted_at,
+        preload: [participant: [:user]]
     )
+  end
+
+  @doc """
+  Finds or creates a participant for a registered user in a chat room.
+  """
+  def find_or_create_participant_for_user(chat_room_id, user_id) do
+    # Placeholder implementation:
+    # In a real application, you would query for an existing participant
+    # with the given chat_room_id and user_id. If found, return it.
+    # If not found, create a new participant with chat_room_id and user_id.
+    # For now, we'll just create a new one every time (this is NOT correct for production).
+    # TODO: Fix display name to not make it based on user id
+    # create_participant(%{
+    #   chat_room_id: chat_room_id,
+    #   user_id: user_id,
+    #   display_name: String.slice(user_id, 0, 4)
+    # })
+
+
+
+    case Repo.get_by(Participant, chat_room_id: chat_room_id, user_id: user_id) do
+      nil -> 
+        create_participant(%{
+          chat_room_id: chat_room_id,
+          user_id: user_id,
+          display_name: generate_display_name()
+        })
+      participant -> {:ok, participant}
+    end
+  end
+
+  @doc """
+  Finds or creates a participant for an anonymous user in a chat room.
+  """
+  def find_or_create_participant_for_anonymous(chat_room_id) do
+    # Placeholder implementation:
+    # In a real application, you would need a way to uniquely identify an anonymous user's session
+    # across LiveView mounts to find an existing participant. This is a simplified approach.
+    # We'll generate a random identifier for the display name for now.
+    # TODO: Implement real version via cookies
+    create_participant(%{
+      chat_room_id: chat_room_id,
+      display_name: "Guest-#{String.upcase(generate_display_name())}"
+    })
+  end
+
+  defp generate_display_name() do
+    :rand.uniform(36 ** 4) |> Integer.to_string(36) |> String.pad_leading(4, "0")
   end
 end
