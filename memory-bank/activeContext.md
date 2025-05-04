@@ -2,20 +2,21 @@
 
 ## Current Work Focus
 
-Setting up and verifying the basic user authentication system for the AI-Assisted Group Chat PWA using Elixir/Phoenix's `phx.gen.auth`.
+Setting up the basic user authentication system and basic chat room management for the AI-Assisted Group Chat PWA using Elixir/Phoenix.
 
 ## Recent Changes
 
 - Initial core memory bank files created and updated.
-- Ran `mix phx.gen.auth Accounts User users --binary-id` to generate authentication code.
-- Ran `mix deps.get` to fetch new dependencies.
-- Ran `mix ecto.create` to create the development database.
-- Ran `mix ecto.migrate` to create the necessary authentication tables (`users`, `users_tokens`).
-- User manually verified that the generated registration and login pages are functional and confirmed account creation via the development mailbox.
+- Ran `mix phx.gen.auth Accounts User users --binary-id` to generate authentication code, fetched dependencies, created the database, and ran migrations. User manually verified registration and login.
+- Ran `mix phx.gen.live Chat ChatRoom chat_rooms name:string:unique user_id:references:users` to generate chat room management code.
+- Corrected the `CreateChatRooms` migration to use `type: :uuid` for the `user_id` reference.
+- Ran `mix ecto.migrate` to create the `chat_rooms` table.
+- Added chat room management routes to the authenticated scope in `lib/ai_group_chat_web/router.ex`.
+- User manually verified that the chat room index page is accessible to a logged-in user.
 
 ## Next Steps
 
-- Integrate the generated authentication components into the main application flow (e.g., restricting access to certain pages).
+- Implement the real-time text chat functionality within chat rooms using Phoenix Channels.
 - Begin implementing the Account Grouping/Invite System.
 - Continue implementing other core features as outlined in the MVP section of the project brief.
 
@@ -26,15 +27,19 @@ Setting up and verifying the basic user authentication system for the AI-Assiste
 - Integrating with a third-party LLM API for AI functionality.
 - Designing for PWA capabilities from the outset.
 - Using `phx.gen.auth` for the core authentication system.
+- Using `phx.gen.live` for basic chat room management.
+- Using UUIDs for user and chat room IDs.
 
 ## Important Patterns and Preferences
 
 - Following Elixir/Phoenix conventions and best practices.
 - Prioritizing real-time performance and scalability.
+- Ensuring routes requiring authentication are properly protected.
 
 ## Learnings and Project Insights
 
 - The project requires a robust real-time communication layer.
 - AI integration needs careful consideration for both public and private interactions.
 - PWA features will enhance user accessibility and experience.
-- `phx.gen.auth` provides a solid foundation for the authentication system.
+- `phx.gen.auth` and `phx.gen.live` are effective generators for scaffolding core features.
+- Need to be mindful of data type consistency (e.g., UUIDs) when generating code that references existing schemas.

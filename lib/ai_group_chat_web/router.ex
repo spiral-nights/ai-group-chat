@@ -68,6 +68,13 @@ defmodule AiGroupChatWeb.Router do
       on_mount: [{AiGroupChatWeb.UserAuth, :ensure_authenticated}] do
       live "/users/settings", UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
+
+      live "/chat_rooms", ChatRoomLive.Index, :index
+      live "/chat_rooms/new", ChatRoomLive.Index, :new
+      live "/chat_rooms/:id/edit", ChatRoomLive.Index, :edit
+
+      live "/chat_rooms/:id", ChatRoomLive.Show, :show
+      live "/chat_rooms/:id/show/edit", ChatRoomLive.Show, :edit
     end
   end
 
