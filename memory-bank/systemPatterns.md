@@ -21,15 +21,16 @@ The project follows a client-server architecture. The backend is built with Elix
 ## Component Relationships
 
 - **Users:** Interact with the Phoenix LiveView frontend.
-- **LiveView:** Communicates with the Phoenix backend and Channels.
-- **Phoenix Channels:** Manages real-time message broadcasting within chat rooms.
-- **Backend Contexts:** Handle user authentication, account management, chat room management, and AI integration logic.
-- **Database:** Persists user data, chat room information, and message history.
+- **LiveView:** Communicates with the Phoenix backend and Channels. Handles user interactions and displays chat messages.
+- **Phoenix Channels:** Manages real-time message broadcasting within chat rooms via a dedicated `ChatRoomSocket`.
+- **Backend Contexts:** Handle user authentication, account management, chat room management, participant management, message persistence, and AI integration logic.
+- **Database:** Persists user data, chat room information, participant data (linking users/guests to rooms), and message history.
 - **AI API:** Provides AI responses based on user queries and chat context.
 
 ## Critical Implementation Paths
 
 - User authentication and authorization flow.
-- Real-time message delivery and display in chat rooms.
+- Participant management (creating/finding participants for registered and anonymous users).
+- Real-time message delivery and display in chat rooms, linked via participants.
 - AI request and response handling, including context provision.
-- Guest access mechanism for chat rooms.
+- Guest access mechanism for chat rooms (partially addressed via anonymous participants).
