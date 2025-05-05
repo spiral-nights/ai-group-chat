@@ -81,7 +81,7 @@ defmodule AiGroupChatWeb.Router do
   scope "/", AiGroupChatWeb do
     pipe_through [:browser]
 
-    live_session :guest_user, on_mount: [{AiGroupChatWeb.UserAuth, :mount_current_user}] do
+    live_session :public_chat, on_mount: [{AiGroupChatWeb.UserAuth, :mount_current_user}] do
       live "/chat_rooms/:id", ChatRoomLive.Show, :show
     end
   end

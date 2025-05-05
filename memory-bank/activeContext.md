@@ -2,22 +2,25 @@
 
 ## Current Work Focus
 
-Implementing real-time text chat functionality within chat rooms using Phoenix Channels and refactoring the application to use a `Participant` schema for handling both registered and anonymous users.
+Implementing local storage-based identification for guest participants to prevent duplicate participant records.
 
 ## Recent Changes
 
-- Implemented real-time text chat functionality within chat rooms using Phoenix Channels.
-- Refactored the application to use a `Participant` schema to represent users in chat rooms, allowing for both registered and anonymous users.
-- Created a new `Participant` schema and migration.
-- Modified the `Message` schema and migration to reference `Participant` instead of `User`.
-- Updated the `Chat` context to include functions for managing participants and messages.
-- Updated the `ChatRoomLive.Show` LiveView to handle participant creation and message display.
-- Corrected data type inconsistencies in migrations and schemas (using `binary_id` and `id`).
+- Modified `assets/js/app.js` to:
+    - Remove cookie handling.
+    - Push a "guest-id-event" after mount, including the guest_id from local storage (if any).
+    - Handle the "store-guest-id" event to save the guest_id to local storage.
+- Modified `lib/ai_group_chat_web/live/chat_room_live/show.ex` to:
+    - Remove participant creation/lookup logic from the `mount` function.
+    - Add a `handle_event` for "guest-id-event" to handle participant lookup/creation based on the guest_id from local storage or the logged-in user.
+    - Generate a new guest_id using `create_guest_id` if no guest_id is found.
+- Removed the `lib/ai_group_chat_web/plugs/extract_guest_cookies.ex` file.
+- Removed the `ExtractGuestCookies` plug from the router in `lib/ai_group_chat_web/router.ex`.
 
 ## Next Steps
 
 - Begin implementing the Account Grouping/Invite System.
-- Refine the Guest Access mechanism, particularly the anonymous user identification and display name handling.
+- Refine the Guest Access mechanism, particularly the anonymous user display name handling (currently uses a slice of the guest_id).
 - Implement the AI Participant Integration (public and private interaction).
 - Continue implementing other core features as outlined in the MVP section of the project brief.
 
@@ -25,7 +28,7 @@ Implementing real-time text chat functionality within chat rooms using Phoenix C
 
 - Utilizing Elixir/Phoenix with LiveView and Channels for real-time PWA development.
 - Using a `Participant` schema to handle both registered and anonymous users in chat rooms.
-- Generating a random identifier for anonymous users' display names.
+- Implementing local storage-based identification for guest users to maintain their participant record across sessions.
 - Using `binary_id` for primary keys in `chat_rooms` and `participants` tables and standard `id` for `messages` table.
 
 ## Important Patterns and Preferences
@@ -40,4 +43,5 @@ Implementing real-time text chat functionality within chat rooms using Phoenix C
 - Using a `Participant` schema simplifies handling both registered and anonymous users in chat rooms.
 - Careful attention to data types and foreign key relationships is crucial for database integrity.
 - It's important to consider the order of migrations to avoid dependency issues.
-- Generating a random identifier provides a simple way to identify anonymous users.
+- Local storage-based identification provides a way to persist guest identity across sessions without requiring registration, and avoids the need for a plug.
+- Pushing events from the LiveView to the client is a good way to trigger client-side storage updates.

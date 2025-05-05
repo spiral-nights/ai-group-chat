@@ -174,6 +174,13 @@ defmodule AiGroupChat.Chat do
   end
 
   @doc """
+  Finds a participant by guest ID and chat room ID.
+  """
+  def find_participant_by_guest_id(chat_room_id, guest_id) do
+    Repo.get_by(Participant, chat_room_id: chat_room_id, guest_id: guest_id)
+  end
+
+  @doc """
   Finds or creates a participant for a registered user in a chat room.
   """
   def find_or_create_participant_for_user(chat_room_id, user_id) do
@@ -192,7 +199,7 @@ defmodule AiGroupChat.Chat do
 
 
     case Repo.get_by(Participant, chat_room_id: chat_room_id, user_id: user_id) do
-      nil -> 
+      nil ->
         create_participant(%{
           chat_room_id: chat_room_id,
           user_id: user_id,

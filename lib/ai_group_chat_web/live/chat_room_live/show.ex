@@ -3,6 +3,8 @@ defmodule AiGroupChatWeb.ChatRoomLive.Show do
 
   alias AiGroupChat.Chat
   alias AiGroupChat.Chat.Message
+  alias Plug.Conn
+  alias Ecto.UUID
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
@@ -10,45 +12,9 @@ defmodule AiGroupChatWeb.ChatRoomLive.Show do
     messages = Chat.list_messages_by_room(chat_room.id)
     topic = "chat_room:#{chat_room.id}"
 
-    # Handle participant creation/lookup
-    user = get_in(socket.assigns, [:current_user]) || nil
-
-    participant =
-      if connected?(socket) do
-        if user do
-          # Find or create participant for registered user
-          case Chat.find_or_create_participant_for_user(chat_room.id, user.id) do
-            {:ok, participant} ->
-              participant
-
-            # Handle error appropriately
-            {:error, _} ->
-              nil
-          end
-        else
-          # Find or create participant for anonymous user (based on session or other identifier)
-          # This is a placeholder and needs a proper implementation for anonymous user identification
-          # Using socket.id as a temporary identifier
-          IO.puts("in anon block")
-          case Chat.find_or_create_participant_for_anonymous(chat_room.id) do
-            {:ok, participant} -> participant
-            # Handle error appropriately
-            {:error, error} ->
-              IO.inspect(error, label: "error is")
-              nil
-          end
-        end
-      else
-        # No participant for now -- wait until socket connection
-        nil
-      end
-
-    IO.inspect(participant, label: "participant is")
-
     if connected?(socket), do: Phoenix.PubSub.subscribe(AiGroupChat.PubSub, topic)
 
     # Add the structure for the new message
-    changeset = Message.changeset(%Message{}, %{})
     message_form = empty_message_form()
 
     {:ok,
@@ -56,7 +22,7 @@ defmodule AiGroupChatWeb.ChatRoomLive.Show do
        chat_room: chat_room,
        messages: messages,
        message_form: message_form,
-       participant: participant
+       participant: nil # Participant is nil initially
      )}
   end
 
@@ -71,6 +37,81 @@ defmodule AiGroupChatWeb.ChatRoomLive.Show do
   @impl true
   def handle_info({:new_message, message}, socket) do
     {:noreply, update(socket, :messages, fn messages -> messages ++ [message] end)}
+  end
+
+  @impl true
+  def handle_event("guest-id-event", %{"guest_id" => guest_id}, socket) do
+    chat_room = socket.assigns.chat_room
+    user = get_in(socket.assigns, [:current_user])
+
+    {participant, socket} =
+      if user do
+        # Find or create participant for registered user
+        case Chat.find_or_create_participant_for_user(chat_room.id, user.id) do
+          {:ok, participant} ->
+            {participant, socket}
+
+          # Handle error appropriately
+          {:error, _} ->
+            {nil, socket}
+        end
+      else
+        # Handle anonymous user with guest_id from local storage
+        case guest_id do
+          nil ->
+            # No guest_id in local storage, create a new participant and generate a new guest_id
+            new_guest_id = create_guest_id()
+
+            attrs = %{
+              chat_room_id: chat_room.id,
+              guest_id: new_guest_id,
+              display_name: "Guest-#{String.upcase(String.slice(new_guest_id, 0, 4))}"
+            }
+
+            case Chat.create_participant(attrs) do
+              {:ok, participant} ->
+                # Push event to client to store the new guest_id in local storage
+                {participant, push_event(socket, "store-guest-id", %{id: new_guest_id})}
+
+              {:error, error} ->
+                IO.inspect(error, label: "error creating anonymous participant")
+                {nil, socket}
+            end
+
+          guest_id ->
+            # guest_id exists in local storage, try to find the participant
+            case Chat.find_participant_by_guest_id(chat_room.id, guest_id) do
+              nil ->
+                # Participant not found with this guest_id, create a new one and update local storage
+                new_guest_id = create_guest_id()
+
+                attrs = %{
+                  chat_room_id: chat_room.id,
+                  guest_id: new_guest_id,
+                  display_name: "Guest-#{String.upcase(String.slice(new_guest_id, 0, 4))}"
+                }
+
+                case Chat.create_participant(attrs) do
+                  {:ok, participant} ->
+                    # Push event to client to store the new guest_id in local storage
+                    {participant, push_event(socket, "store-guest-id", %{id: new_guest_id})}
+
+                  {:error, error} ->
+                    IO.inspect(error,
+                      label: "error creating anonymous participant with existing guest_id"
+                    )
+
+                    {nil, socket}
+                end
+
+              participant ->
+                # Participant found, return it
+                {participant, socket}
+            end
+        end
+      end
+
+    {:noreply, assign(socket, :participant, participant)}
   end
 
   @impl true
@@ -105,4 +146,10 @@ defmodule AiGroupChatWeb.ChatRoomLive.Show do
   defp page_title(:edit), do: "Edit Chat room"
 
   defp empty_message_form(), do: to_form(Message.changeset(%Message{}, %{}))
+
+  defp create_guest_id() do
+    token = :crypto.strong_rand_bytes(32)
+    hashed_token = :crypto.hash(:sha256, token)
+    Base.url_encode64(hashed_token, padding: false)
+  end
 end

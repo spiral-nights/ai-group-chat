@@ -8,7 +8,7 @@
   </:actions>
 </.header>
 
-<div id="chat-box" class="border p-4 h-64 overflow-y-scroll">
+<div id="chat-box" class="border p-4 h-64 overflow-y-scroll" phx-hook="ChatHook">
   <%= for message <- @messages do %>
     <p>
       <strong><%= message.participant.display_name %>:</strong> <%= message.content %>

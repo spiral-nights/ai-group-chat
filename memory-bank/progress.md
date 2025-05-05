@@ -8,17 +8,18 @@
 - Basic Chat Room Management setup using `phx.gen.live` is complete, including schema, context, and LiveViews for listing/creating/managing rooms (accessible to authenticated users).
 - Real-time text chat functionality within chat rooms using Phoenix Channels is implemented, supporting both registered and anonymous users.
 - The application has been refactored to use a `Participant` schema for handling users in chat rooms.
+- Local storage-based identification for guest participants has been implemented to prevent duplicate participant records.
 
 ## What's Left to Build
 
 - Account Grouping/Invite System.
-- Guest Access mechanism for chat rooms.
-- AI Participant Integration (public and private interaction).
+- Refine the Guest Access mechanism, particularly the anonymous user display name handling.
+- Implement the AI Participant Integration (public and private interaction).
 - PWA Functionality (manifest file, service worker).
 
 ## Current Status
 
-The foundational authentication and basic chat room management systems are set up and verified. Real-time text chat functionality has been implemented and refactored to use a `Participant` schema for handling both registered and anonymous users.
+The foundational authentication and basic chat room management systems are set up and verified. Real-time text chat functionality has been implemented and refactored to use a `Participant` schema for handling both registered and anonymous users. Cookie-based identification for guest participants is now implemented.
 
 ## Known Issues
 
@@ -32,3 +33,4 @@ The foundational authentication and basic chat room management systems are set u
 - Decision to use `mix phx.gen.live` for basic chat room management.
 - Decision to refactor the application to use a `Participant` schema for handling both registered and anonymous users.
 - Decision to use `binary_id` for primary keys in `chat_rooms` and `participants` tables and standard `id` for `messages` table.
+- Decision to replace cookie-based guest identification with local storage-based identification.
