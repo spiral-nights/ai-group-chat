@@ -7,6 +7,7 @@ defmodule AiGroupChat.Chat.ChatRoom do
     field :name, :string
 
     belongs_to :account, AiGroupChat.Accounts.Account, type: :binary_id
+    has_many :participants, AiGroupChat.Chat.Participant
     timestamps(type: :utc_datetime)
   end
 
@@ -15,6 +16,7 @@ defmodule AiGroupChat.Chat.ChatRoom do
     chat_room
     |> cast(attrs, [:name, :account_id])
     |> validate_required([:name, :account_id])
-    |> unique_constraint(:name) # Consider if name should be unique per account
+    # Consider if name should be unique per account
+    |> unique_constraint(:name)
   end
 end

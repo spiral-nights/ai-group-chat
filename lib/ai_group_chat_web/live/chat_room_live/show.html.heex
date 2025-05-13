@@ -24,14 +24,28 @@
 </.simple_form>
 
 <div class="mt-4">
-  <.label for="user-to-add">Add user to chat room:</.label>
-  <select id="user-to-add" name="user_id" phx-change="select_user_to_add">
-    <option value="">Select a user</option>
-    <%= for user <- @users_to_add do %>
-      <option value={user.id}><%= user.email %></option>
+  <.form for={%{}} as={:participant} phx-submit="add_participant">
+    <.label for="user-to-add">Add user to chat room:</.label>
+    <.input 
+      type="select" 
+      id="user-to-add" 
+      name="user_id" 
+      options={Enum.map(@users_to_add, &{&1.email, &1.id})}
+      prompt="Select a user"
+      phx-change="select_user_to_add"
+      value={@selected_user_id}
+    />
+    <.button type="submit" disabled={!@selected_user_id}>Add User</.button>
+  </.form>
+</div>
+
+<div class="mt-4">
+  <h3>Participants:</h3>
+  <ul>
+    <%= for participant <- @participants do %>
+      <li><%= participant.user.email %></li>
     <% end %>
-  </select>
-  <.button phx-click="add_participant" phx-value-user_id={@selected_user_id} disabled={!@selected_user_id}>Add User</.button>
+  </ul>
 </div>
 
 <.back navigate={~p"/chat_rooms"}>Back to chat_rooms</.back>

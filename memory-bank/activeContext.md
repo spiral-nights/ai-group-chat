@@ -20,6 +20,8 @@ Memory bank update to reflect the completed invitation registration feature and 
 - Added the necessary `alias AiGroupChat.Repo` in `lib/ai_group_chat_web/live/invitation_registration_live.ex` to resolve the `AiGroupChat.Accounts.Repo.get!/2` undefined function error.
 - Debugged issues related to template rendering in `AiGroupChatWeb.EmailComponents`, including removing a recursive `render/2` function and correcting a `render_to_string` call (these changes are not currently active for invitation emails due to embedded HTML).
 - The user manually resolved the `:inner_content` not found error on the invitation registration page and verified the invitation registration feature is now working.
+- Implemented displaying the list of participants in the chat room and updated the participant check logic in `lib/ai_group_chat_web/live/chat_room_live/show.ex`.
+- Implemented real-time participant list updates in `lib/ai_group_chat_web/live/chat_room_live/show.ex` by broadcasting participant additions and handling the broadcast to refetch and update the participant list.
 
 ## Next Steps
 

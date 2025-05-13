@@ -40,6 +40,24 @@ defmodule AiGroupChat.Chat do
   end
 
   @doc """
+  Returns the list of chat_rooms for the given user and account.
+
+  ## Examples
+
+      iex> list_chat_rooms_for_user_and_account(123, 456)
+      [%ChatRoom{}, ...]
+
+  """
+  def list_chat_rooms_for_user_and_account(user_id, account_id) do
+    Repo.all(
+      from cr in ChatRoom,
+        join: p in assoc(cr, :participants),
+        where: cr.account_id == ^account_id and p.user_id == ^user_id,
+        distinct: true
+    )
+  end
+
+  @doc """
   Gets a single chat_room.
 
   Raises `Ecto.NoResultsError` if the Chat room does not exist.

@@ -10,7 +10,7 @@ defmodule AiGroupChatWeb.ChatRoomLive.Index do
      stream(
        socket,
        :chat_rooms,
-       Chat.list_chat_rooms_for_account(socket.assigns.current_user.account_id)
+       Chat.list_chat_rooms_for_user_and_account(socket.assigns.current_user.id, socket.assigns.current_user.account_id)
      )}
   end
 

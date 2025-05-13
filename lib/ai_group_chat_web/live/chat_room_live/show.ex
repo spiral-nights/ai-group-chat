@@ -13,17 +13,20 @@ defmodule AiGroupChatWeb.ChatRoomLive.Show do
 
     if connected?(socket), do: Phoenix.PubSub.subscribe(AiGroupChat.PubSub, topic)
 
+    # Fetch participants for the chat room
+    participants = Chat.list_participants_by_room(chat_room.id) |> AiGroupChat.Repo.preload(:user)
+
     # Add the structure for the new message form
     message_form = empty_message_form()
     user = socket.assigns.current_user
 
     # Check if the user is a participant in the chat room
-    participant = Chat.get_participant_by_room_and_user(chat_room.id, user.id)
+    participant = Enum.find(participants, &(&1.user_id == user.id))
 
     if participant do
       # Fetch users in the same account, excluding current user and existing participants
       existing_participant_user_ids =
-        Chat.list_participants_by_room(chat_room.id)
+        participants
         |> Enum.map(& &1.user_id)
 
       users_to_add =
@@ -37,6 +40,7 @@ defmodule AiGroupChatWeb.ChatRoomLive.Show do
        assign(socket,
          chat_room: chat_room,
          messages: messages,
+         participants: participants, # Assign participants to the socket
          message_form: message_form,
          participant: participant,
          users_to_add: users_to_add,
@@ -65,12 +69,17 @@ defmodule AiGroupChatWeb.ChatRoomLive.Show do
   end
 
   @impl true
+  def handle_info({:participant_added, chat_room_id}, socket) do
+    # Refetch participants for the chat room and update the socket
+    participants = Chat.list_participants_by_room(chat_room_id) |> AiGroupChat.Repo.preload(:user)
+    {:noreply, assign(socket, :participants, participants)}
+  end
+
+  @impl true
   def handle_event("send_message", %{"message" => %{"content" => content}}, socket) do
     chat_room = socket.assigns.chat_room
     # Assuming participant is assigned to the socket
     participant = socket.assigns.participant
-
-    IO.inspect(participant, label: "participant")
 
     message_attrs = %{
       content: content,
@@ -107,7 +116,10 @@ defmodule AiGroupChatWeb.ChatRoomLive.Show do
 
     case Chat.add_user_to_chat_room(chat_room, adding_user, user_to_add) do
       {:ok, _participant} ->
-        # Successfully added, update users_to_add and clear selected user
+        # Successfully added, broadcast update and update users_to_add and clear selected user
+        topic = "chat_room:#{chat_room.id}"
+        Phoenix.PubSub.broadcast(AiGroupChat.PubSub, topic, {:participant_added, chat_room.id})
+
         updated_users_to_add = Enum.reject(socket.assigns.users_to_add, &(&1.id == user_id))
 
         {:noreply,
