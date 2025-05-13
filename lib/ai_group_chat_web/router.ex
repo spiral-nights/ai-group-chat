@@ -53,6 +53,7 @@ defmodule AiGroupChatWeb.Router do
     live_session :redirect_if_user_is_authenticated,
       on_mount: [{AiGroupChatWeb.UserAuth, :redirect_if_user_is_authenticated}] do
       live "/users/register", UserRegistrationLive, :new
+      live "/users/register/:token", InvitationRegistrationLive, :new
       live "/users/log_in", UserLoginLive, :new
       live "/users/reset_password", UserForgotPasswordLive, :new
       live "/users/reset_password/:token", UserResetPasswordLive, :edit
@@ -74,17 +75,13 @@ defmodule AiGroupChatWeb.Router do
       live "/chat_rooms/:id/edit", ChatRoomLive.Index, :edit
 
       # allow anyone to join chat room
-      live "/chat_rooms/:id/show/edit", ChatRoomLive.Show, :edit
-    end
-  end
-
-  scope "/", AiGroupChatWeb do
-    pipe_through [:browser]
-
-    live_session :public_chat, on_mount: [{AiGroupChatWeb.UserAuth, :mount_current_user}] do
       live "/chat_rooms/:id", ChatRoomLive.Show, :show
+      live "/chat_rooms/:id/show/edit", ChatRoomLive.Show, :edit
+
+      live "/invitations", InvitationLive.Index, :index
     end
   end
+
 
   scope "/", AiGroupChatWeb do
     pipe_through [:browser]

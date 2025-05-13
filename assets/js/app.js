@@ -29,12 +29,7 @@ let liveSocket = new LiveSocket("/live", Socket, {
   hooks: {
     ChatHook: {
       mounted() {
-        let guestId = localStorage.getItem("guest_id");
-        this.pushEvent("guest-id-event", { guest_id: guestId });
-
-        this.handleEvent("store-guest-id", eventData => {
-          localStorage.setItem("guest_id", eventData["id"]);
-        })
+        // TODO
       }
     }
   }

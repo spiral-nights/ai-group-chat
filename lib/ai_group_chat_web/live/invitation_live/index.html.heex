@@ -1,0 +1,14 @@
+<div class="mx-auto max-w-md">
+  <.header>Invite User</.header>
+
+  <%= if @result do %>
+    <div class="alert alert-info"><%= elem(@result, 1) %></div>
+  <% end %>
+
+  <.simple_form for={@form} id="invite-form" phx-submit="send_invitation">
+    <.input field={@form[:email]} type="email" label="Email" required />
+    <:actions>
+      <.button>Send Invitation</.button>
+    </:actions>
+  </.simple_form>
+</div>

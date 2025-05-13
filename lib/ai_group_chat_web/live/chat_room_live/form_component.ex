@@ -1,5 +1,6 @@
 defmodule AiGroupChatWeb.ChatRoomLive.FormComponent do
   use AiGroupChatWeb, :live_component
+  require Logger
 
   alias AiGroupChat.Chat
 
@@ -64,7 +65,12 @@ defmodule AiGroupChatWeb.ChatRoomLive.FormComponent do
   end
 
   defp save_chat_room(socket, :new, chat_room_params) do
-    case Chat.create_chat_room(chat_room_params) do
+    # Pass the current user to create_chat_room
+    chat_room_params =
+      chat_room_params
+      |> Map.put("account_id", socket.assigns.current_user.account_id)
+
+    case Chat.create_chat_room(chat_room_params, socket.assigns.current_user) do
       {:ok, chat_room} ->
         notify_parent({:saved, chat_room})
 
@@ -74,6 +80,8 @@ defmodule AiGroupChatWeb.ChatRoomLive.FormComponent do
          |> push_patch(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
+        Logger.error("Encountered error", error: changeset)
+        IO.inspect(changeset)
         {:noreply, assign(socket, form: to_form(changeset))}
     end
   end

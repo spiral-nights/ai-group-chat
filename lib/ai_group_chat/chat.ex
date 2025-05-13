@@ -23,6 +23,23 @@ defmodule AiGroupChat.Chat do
   end
 
   @doc """
+  Returns the list of chat_rooms for the given account.
+
+  ## Examples
+
+      iex> list_chat_rooms_for_account(123)
+      [%ChatRoom{}, ...]
+
+  """
+  def list_chat_rooms_for_account(account_id) do
+    case Repo.get_by(ChatRoom, account_id: account_id) do
+      room_list when is_list(room_list) -> room_list
+      nil -> []
+      single_item -> [single_item]
+    end
+  end
+
+  @doc """
   Gets a single chat_room.
 
   Raises `Ecto.NoResultsError` if the Chat room does not exist.
@@ -50,10 +67,31 @@ defmodule AiGroupChat.Chat do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_chat_room(attrs \\ %{}) do
+  def create_chat_room(attrs \\ %{}, %AiGroupChat.Accounts.User{} = creator) do
     %ChatRoom{id: Ecto.UUID.generate()}
     |> ChatRoom.changeset(attrs)
     |> Repo.insert()
+    |> case do
+      {:ok, chat_room} ->
+        # Create a participant for the creator
+        case create_participant(%{
+               chat_room_id: chat_room.id,
+               user_id: creator.id,
+               # Using email as display name for now
+               display_name: creator.email
+             }) do
+          {:ok, _participant} ->
+            {:ok, chat_room}
+
+          {:error, reason} ->
+            # Handle error creating participant, maybe delete the chat room
+            Repo.delete(chat_room)
+            {:error, reason}
+        end
+
+      {:error, changeset} ->
+        {:error, changeset}
+    end
   end
 
   @doc """
@@ -196,8 +234,6 @@ defmodule AiGroupChat.Chat do
     #   display_name: String.slice(user_id, 0, 4)
     # })
 
-
-
     case Repo.get_by(Participant, chat_room_id: chat_room_id, user_id: user_id) do
       nil ->
         create_participant(%{
@@ -205,7 +241,9 @@ defmodule AiGroupChat.Chat do
           user_id: user_id,
           display_name: generate_display_name()
         })
-      participant -> {:ok, participant}
+
+      participant ->
+        {:ok, participant}
     end
   end
 
@@ -226,5 +264,62 @@ defmodule AiGroupChat.Chat do
 
   defp generate_display_name() do
     :rand.uniform(36 ** 4) |> Integer.to_string(36) |> String.pad_leading(4, "0")
+  end
+
+  @doc """
+  Gets a participant by chat room ID and user ID.
+
+  ## Examples
+
+      iex> get_participant_by_room_and_user(chat_room.id, user.id)
+      %Participant{}
+
+      iex> get_participant_by_room_and_user(chat_room.id, "invalid_user_id")
+      nil
+
+  """
+  def get_participant_by_room_and_user(chat_room_id, user_id) do
+    Repo.get_by(Participant, chat_room_id: chat_room_id, user_id: user_id)
+  end
+
+  @doc """
+  Adds a user as a participant to a chat room.
+
+  Verifies that both the user adding and the user being added are in the same account.
+
+  ## Examples
+
+      iex> add_user_to_chat_room(chat_room, adding_user, user_to_add)
+      {:ok, %Participant{}}
+
+      iex> add_user_to_chat_room(chat_room, adding_user, user_in_different_account)
+      {:error, :users_not_in_same_account}
+
+      iex> add_user_to_chat_room(chat_room, adding_user, user_already_in_room)
+      {:error, :user_already_in_room}
+
+  """
+  def add_user_to_chat_room(
+        %ChatRoom{} = chat_room,
+        %AiGroupChat.Accounts.User{} = adding_user,
+        %AiGroupChat.Accounts.User{} = user_to_add
+      ) do
+    # Verify both users are in the same account
+    if adding_user.account_id != user_to_add.account_id do
+      {:error, :users_not_in_same_account}
+    else
+      # Check if the user is already a participant
+      if get_participant_by_room_and_user(chat_room.id, user_to_add.id) do
+        {:error, :user_already_in_room}
+      else
+        # Create participant for the user being added
+        create_participant(%{
+          chat_room_id: chat_room.id,
+          user_id: user_to_add.id,
+          # Using email as display name for now
+          display_name: user_to_add.email
+        })
+      end
+    end
   end
 end

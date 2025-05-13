@@ -6,15 +6,15 @@ defmodule AiGroupChat.Chat.ChatRoom do
   schema "chat_rooms" do
     field :name, :string
 
-    belongs_to :user, AiGroupChat.Accounts.User, type: :binary_id
+    belongs_to :account, AiGroupChat.Accounts.Account, type: :binary_id
     timestamps(type: :utc_datetime)
   end
 
   @doc false
   def changeset(chat_room, attrs) do
     chat_room
-    |> cast(attrs, [:name])
-    |> validate_required([:name])
-    |> unique_constraint(:name)
+    |> cast(attrs, [:name, :account_id])
+    |> validate_required([:name, :account_id])
+    |> unique_constraint(:name) # Consider if name should be unique per account
   end
 end

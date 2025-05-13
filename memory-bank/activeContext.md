@@ -2,34 +2,45 @@
 
 ## Current Work Focus
 
-Implementing local storage-based identification for guest participants to prevent duplicate participant records.
+Memory bank update to reflect the completed invitation registration feature and recent changes.
 
 ## Recent Changes
 
-- Modified `assets/js/app.js` to:
-    - Remove cookie handling.
-    - Push a "guest-id-event" after mount, including the guest_id from local storage (if any).
-    - Handle the "store-guest-id" event to save the guest_id to local storage.
-- Modified `lib/ai_group_chat_web/live/chat_room_live/show.ex` to:
-    - Remove participant creation/lookup logic from the `mount` function.
-    - Add a `handle_event` for "guest-id-event" to handle participant lookup/creation based on the guest_id from local storage or the logged-in user.
-    - Generate a new guest_id using `create_guest_id` if no guest_id is found.
-- Removed the `lib/ai_group_chat_web/plugs/extract_guest_cookies.ex` file.
-- Removed the `ExtractGuestCookies` plug from the router in `lib/ai_group_chat_web/router.ex`.
+- Created a new LiveView module `InvitationRegistrationLive` (`lib/ai_group_chat_web/live/invitation_registration_live.ex`) and its corresponding template (`lib/ai_group_chat_web/live/invitation_registration_live/invitation_registration.html.heex`) for invitation-based registration.
+- Added a new route `/users/register/:token` to `lib/ai_group_chat_web/router.ex` for the invitation registration page.
+- Removed the redundant `/invitations/:token` route from `lib/ai_group_chat_web/router.ex` and the `InvitationLive.Accept` LiveView module and file (`lib/ai_group_chat_web/live/invitation_live/accept.ex`).
+- Refactored the `handle_event("save", ...)` function in `lib/ai_group_chat_web/live/user_registration_live.ex` to separate normal and invitation registration logic into `handle_normal_registration` and `handle_invitation_registration`.
+- Updated the invitation URL in `lib/ai_group_chat/accounts.ex` to point to the new `/users/register/:token` route.
+- Modified the `create_accounts` migration (`priv/repo/migrations/20250508034036_create_accounts.exs`) to make the `owner_id` column nullable from the start.
+- Removed the unnecessary `make_accounts_owner_id_nullable` migration file (`priv/repo/migrations/20250513042319_make_accounts_owner_id_nullable.exs`).
+- Updated the email sending code in `lib/ai_group_chat/accounts/user_notifier.ex` to embed the HTML email body directly within the `deliver_invitation_instructions` function and updated the `deliver` function to support an optional HTML body.
+- Created the `AiGroupChatWeb.EmailComponents` module (`lib/ai_group_chat_web/email_components.ex`) and configured it to use `Phoenix.Template` for rendering (though this approach was later abandoned for embedded HTML in `user_notifier.ex`).
+- Moved the `invitation.html.heex` template to `lib/ai_group_chat_web/invitation.html.heex` (though this template is not currently used for sending invitations).
+- Corrected the `mount` function in `lib/ai_group_chat_web/live/invitation_live/index.ex` to initialize the invitation form changeset correctly, resolving the "can't be blank" error on the invite sending page.
+- Added the necessary `alias AiGroupChat.Repo` in `lib/ai_group_chat_web/live/invitation_registration_live.ex` to resolve the `AiGroupChat.Accounts.Repo.get!/2` undefined function error.
+- Debugged issues related to template rendering in `AiGroupChatWeb.EmailComponents`, including removing a recursive `render/2` function and correcting a `render_to_string` call (these changes are not currently active for invitation emails due to embedded HTML).
+- The user manually resolved the `:inner_content` not found error on the invitation registration page and verified the invitation registration feature is now working.
 
 ## Next Steps
 
-- Begin implementing the Account Grouping/Invite System.
-- Refine the Guest Access mechanism, particularly the anonymous user display name handling (currently uses a slice of the guest_id).
-- Implement the AI Participant Integration (public and private interaction).
-- Continue implementing other core features as outlined in the MVP section of the project brief.
+- Implement the Task Assignment feature.
+- Implement the Shared Calendar feature.
+- Integrate AI assistance for task assignment and calendar event creation.
+- Implement PWA Functionality (manifest file, service worker).
+- Continue implementing other core features as outlined in the updated project brief.
 
 ## Active Decisions and Considerations
 
 - Utilizing Elixir/Phoenix with LiveView and Channels for real-time PWA development.
-- Using a `Participant` schema to handle both registered and anonymous users in chat rooms.
-- Implementing local storage-based identification for guest users to maintain their participant record across sessions.
-- Using `binary_id` for primary keys in `chat_rooms` and `participants` tables and standard `id` for `messages` table.
+- Focusing on registered users within an account for all core features.
+- Using a `Participant` schema to handle registered users in chat rooms.
+- Implementing an email-based invitation system for account grouping with a dedicated registration page for invited users.
+- Handling invitation acceptance by associating the registered user with the invited account and deleting the invitation.
+- Implementing explicit participant addition for chat rooms with same-account verification.
+- Ensuring database schema and application code are aligned, particularly regarding UUID foreign keys and nullable columns (specifically `owner_id` in `accounts`).
+- Using Phoenix.Token for secure invitation tokens and Swoosh for email delivery.
+- Currently using embedded HTML for the invitation email body in `user_notifier.ex` to avoid template rendering issues.
+- Carefully managing database migrations and schema changes, including modifying existing migrations when necessary and dropping/recreating the database in development.
 
 ## Important Patterns and Preferences
 
@@ -37,11 +48,23 @@ Implementing local storage-based identification for guest participants to preven
 - Prioritizing real-time performance and scalability.
 - Ensuring routes requiring authentication are properly protected.
 - Using a consistent approach for handling data types (UUIDs/binary_ids) in schemas and migrations.
+- Using Phoenix.Token for secure invitation tokens and Swoosh for email delivery.
+- Carefully managing database migrations and schema changes.
+- Using embedded HTML for email bodies as a workaround for template rendering issues in `user_notifier.ex`.
 
 ## Learnings and Project Insights
 
-- Using a `Participant` schema simplifies handling both registered and anonymous users in chat rooms.
-- Careful attention to data types and foreign key relationships is crucial for database integrity.
-- It's important to consider the order of migrations to avoid dependency issues.
-- Local storage-based identification provides a way to persist guest identity across sessions without requiring registration, and avoids the need for a plug.
-- Pushing events from the LiveView to the client is a good way to trigger client-side storage updates.
+- The `Participant` schema can be adapted to handle only registered users.
+- Removing guest access simplifies the authentication and participant management logic.
+- Explicitly defining foreign key fields in schemas is generally good practice, but Ecto's `belongs_to` can handle it implicitly if the naming convention is followed.
+- Implementing a dedicated invitation registration page simplifies the flow for unauthenticated invited users compared to redirecting to the general registration page.
+- Using dedicated email component modules helps organize email templates and rendering logic, but requires careful configuration for template discovery and can sometimes present rendering challenges.
+- Careful attention to migration dependencies and rollbacks is crucial when modifying database schemas, and sometimes modifying prior migrations and dropping/recreating the database is necessary in development.
+- Implementing explicit participant addition requires updating both backend logic and frontend UI/event handling.
+- It's important to double-check the database schema after manual resets to ensure it matches the intended state defined in the migration files.
+- Explicitly preloading associations in LiveView `handle_event` functions may be necessary if the `require_authenticated_user` plug doesn't automatically preload them.
+- Carefully review and test database interactions to prevent type mismatch errors.
+- Debugging template rendering issues requires verifying module configuration, template location, and the arguments passed to rendering functions. Embedded HTML can be a workaround for complex template rendering issues.
+- Recursive function calls can cause infinite loops and stack overflows.
+- The `:inner_content` error indicates a mismatch between a LiveView's layout rendering and the provision of template content.
+- The user has successfully completed the invitation registration feature manually.

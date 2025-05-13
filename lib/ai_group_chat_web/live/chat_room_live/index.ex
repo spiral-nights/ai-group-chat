@@ -6,7 +6,12 @@ defmodule AiGroupChatWeb.ChatRoomLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, stream(socket, :chat_rooms, Chat.list_chat_rooms())}
+    {:ok,
+     stream(
+       socket,
+       :chat_rooms,
+       Chat.list_chat_rooms_for_account(socket.assigns.current_user.account_id)
+     )}
   end
 
   @impl true

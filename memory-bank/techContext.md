@@ -20,7 +20,6 @@
 ## Technical Constraints
 
 - Reliance on external LLM API for AI functionality.
-- Potential limitations of guest access without full authentication.
 - Real-time performance dependent on server resources and network conditions.
 
 ## Dependencies
@@ -29,6 +28,8 @@
 - Frontend dependencies managed with npm/yarn.
 - Database driver (e.g., Postgrex).
 - HTTP client for AI API communication.
+- Swoosh for email sending.
+- Phoenix.Token for generating invitation tokens.
 
 ## Tool Usage Patterns
 

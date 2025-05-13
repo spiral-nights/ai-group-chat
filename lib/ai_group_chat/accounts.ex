@@ -6,7 +6,8 @@ defmodule AiGroupChat.Accounts do
   import Ecto.Query, warn: false
   alias AiGroupChat.Repo
 
-  alias AiGroupChat.Accounts.{User, UserToken, UserNotifier}
+  alias AiGroupChat.Accounts.{Account, Invitation, User, UserToken, UserNotifier}
+  use AiGroupChatWeb, :verified_routes
 
   ## Database getters
 
@@ -349,5 +350,146 @@ defmodule AiGroupChat.Accounts do
       {:ok, %{user: user}} -> {:ok, user}
       {:error, :user, changeset, _} -> {:error, changeset}
     end
+  end
+
+  @doc """
+  Creates an account and sets the given user as the owner.
+
+  ## Examples
+
+      iex> create_account(%{name: "My Family Account"}, user)
+      {:ok, %Account{}}
+
+      iex> create_account(%{name: ""}, user)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_account(account_attrs, %User{} = owner) do
+    %Account{owner_id: owner.id}
+    |> Account.changeset(account_attrs)
+    |> Repo.insert()
+    |> case do
+      {:ok, account} ->
+        # Associate the owner with the account
+        owner
+        |> User.changeset(%{account_id: account.id})
+        |> Repo.update()
+        {:ok, account}
+      {:error, changeset} ->
+        {:error, changeset}
+    end
+  end
+
+  @doc """
+  Creates an invitation for a user to join an account.
+
+  ## Examples
+
+      iex> create_invitation(inviting_user, account, "invitee@example.com")
+      {:ok, %Invitation{}}
+
+      iex> create_invitation(inviting_user, account, "invalid-email")
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_invitation(%User{} = inviting_user, %Account{} = account, email) do
+    # Generate a unique token for the invitation
+    token = Phoenix.Token.sign(AiGroupChatWeb.Endpoint, "invitation", {email, account.id})
+
+    %Invitation{}
+    |> Invitation.changeset(%{
+      email: email,
+      inviting_user_id: inviting_user.id,
+      account_id: account.id,
+      token: token
+    })
+    |> Repo.insert()
+    |> case do
+      {:ok, invitation} ->
+        # Generate invitation URL (placeholder for now)
+        # invitation_url = Routes.url(Endpoint, :invitation, invitation.token)
+        invitation_url = ~p"/users/register/#{invitation.token}"
+
+        # Deliver invitation email
+        UserNotifier.deliver_invitation_instructions(
+          invitation.email,
+          account.name,
+          invitation_url
+        )
+
+        {:ok, invitation}
+
+      {:error, changeset} ->
+        {:error, changeset}
+    end
+  end
+
+  @doc """
+  Gets an invitation by token.
+
+  ## Examples
+
+      iex> get_invitation_by_token("valid_token")
+      %Invitation{}
+
+      iex> get_invitation_by_token("invalid_token")
+      nil
+
+  """
+  def get_invitation_by_token(token) do
+    Repo.get_by(Invitation, token: token)
+  end
+
+  @doc """
+  Associates a user with an account.
+
+  ## Examples
+
+      iex> associate_user_with_account(user, account_id)
+      {:ok, %User{}}
+
+      iex> associate_user_with_account(user, "invalid_account_id")
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def associate_user_with_account(%User{} = user, account_id) do
+    user
+    |> User.changeset(%{account_id: account_id})
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes an invitation.
+
+  ## Examples
+
+      iex> delete_invitation(invitation)
+      {:ok, %Invitation{}}
+
+      iex> delete_invitation(invitation)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_invitation(%Invitation{} = invitation) do
+    Repo.delete(invitation)
+  end
+
+  @doc """
+  Lists users belonging to an account, excluding specified user IDs.
+
+  ## Examples
+
+      iex> list_users_by_account_excluding(account.id, [user1.id, user2.id])
+      [%User{}, ...]
+
+      iex> list_users_by_account_excluding("invalid_account_id", [])
+      []
+
+  """
+  def list_users_by_account_excluding(account_id, excluded_user_ids) do
+    Repo.all(
+      from u in User,
+        where: u.account_id == ^account_id and u.id not in ^excluded_user_ids
+    )
   end
 end

@@ -3,8 +3,7 @@ defmodule AiGroupChatWeb.ChatRoomLive.Show do
 
   alias AiGroupChat.Chat
   alias AiGroupChat.Chat.Message
-  alias Plug.Conn
-  alias Ecto.UUID
+  alias AiGroupChat.Accounts
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
@@ -14,16 +13,42 @@ defmodule AiGroupChatWeb.ChatRoomLive.Show do
 
     if connected?(socket), do: Phoenix.PubSub.subscribe(AiGroupChat.PubSub, topic)
 
-    # Add the structure for the new message
+    # Add the structure for the new message form
     message_form = empty_message_form()
+    user = socket.assigns.current_user
 
-    {:ok,
-     assign(socket,
-       chat_room: chat_room,
-       messages: messages,
-       message_form: message_form,
-       participant: nil # Participant is nil initially
-     )}
+    # Check if the user is a participant in the chat room
+    participant = Chat.get_participant_by_room_and_user(chat_room.id, user.id)
+
+    if participant do
+      # Fetch users in the same account, excluding current user and existing participants
+      existing_participant_user_ids =
+        Chat.list_participants_by_room(chat_room.id)
+        |> Enum.map(& &1.user_id)
+
+      users_to_add =
+        if user.account_id do
+          Accounts.list_users_by_account_excluding(user.account_id, [user.id | existing_participant_user_ids])
+        else
+          [] # User is not in an account, no users to add
+        end
+
+      {:ok,
+       assign(socket,
+         chat_room: chat_room,
+         messages: messages,
+         message_form: message_form,
+         participant: participant,
+         users_to_add: users_to_add,
+         selected_user_id: nil
+       )}
+    else
+      # User is not a participant, redirect or show unauthorized message
+      {:ok,
+       socket
+       |> put_flash(:error, "You do not have access to this chat room.")
+       |> redirect(to: ~p"/")} # Redirect to home or a specific unauthorized page
+    end
   end
 
   @impl true
@@ -37,81 +62,6 @@ defmodule AiGroupChatWeb.ChatRoomLive.Show do
   @impl true
   def handle_info({:new_message, message}, socket) do
     {:noreply, update(socket, :messages, fn messages -> messages ++ [message] end)}
-  end
-
-  @impl true
-  def handle_event("guest-id-event", %{"guest_id" => guest_id}, socket) do
-    chat_room = socket.assigns.chat_room
-    user = get_in(socket.assigns, [:current_user])
-
-    {participant, socket} =
-      if user do
-        # Find or create participant for registered user
-        case Chat.find_or_create_participant_for_user(chat_room.id, user.id) do
-          {:ok, participant} ->
-            {participant, socket}
-
-          # Handle error appropriately
-          {:error, _} ->
-            {nil, socket}
-        end
-      else
-        # Handle anonymous user with guest_id from local storage
-        case guest_id do
-          nil ->
-            # No guest_id in local storage, create a new participant and generate a new guest_id
-            new_guest_id = create_guest_id()
-
-            attrs = %{
-              chat_room_id: chat_room.id,
-              guest_id: new_guest_id,
-              display_name: "Guest-#{String.upcase(String.slice(new_guest_id, 0, 4))}"
-            }
-
-            case Chat.create_participant(attrs) do
-              {:ok, participant} ->
-                # Push event to client to store the new guest_id in local storage
-                {participant, push_event(socket, "store-guest-id", %{id: new_guest_id})}
-
-              {:error, error} ->
-                IO.inspect(error, label: "error creating anonymous participant")
-                {nil, socket}
-            end
-
-          guest_id ->
-            # guest_id exists in local storage, try to find the participant
-            case Chat.find_participant_by_guest_id(chat_room.id, guest_id) do
-              nil ->
-                # Participant not found with this guest_id, create a new one and update local storage
-                new_guest_id = create_guest_id()
-
-                attrs = %{
-                  chat_room_id: chat_room.id,
-                  guest_id: new_guest_id,
-                  display_name: "Guest-#{String.upcase(String.slice(new_guest_id, 0, 4))}"
-                }
-
-                case Chat.create_participant(attrs) do
-                  {:ok, participant} ->
-                    # Push event to client to store the new guest_id in local storage
-                    {participant, push_event(socket, "store-guest-id", %{id: new_guest_id})}
-
-                  {:error, error} ->
-                    IO.inspect(error,
-                      label: "error creating anonymous participant with existing guest_id"
-                    )
-
-                    {nil, socket}
-                end
-
-              participant ->
-                # Participant found, return it
-                {participant, socket}
-            end
-        end
-      end
-
-    {:noreply, assign(socket, :participant, participant)}
   end
 
   @impl true
@@ -142,14 +92,42 @@ defmodule AiGroupChatWeb.ChatRoomLive.Show do
     end
   end
 
+  @impl true
+  def handle_event("select_user_to_add", %{"user_id" => user_id}, socket) do
+    {:noreply, assign(socket, selected_user_id: user_id)}
+  end
+
+  @impl true
+  def handle_event("add_participant", %{"user_id" => user_id}, socket) do
+    chat_room = socket.assigns.chat_room
+    adding_user = socket.assigns.current_user
+
+    # Retrieve the user to be added
+    user_to_add = Accounts.get_user!(user_id)
+
+    case Chat.add_user_to_chat_room(chat_room, adding_user, user_to_add) do
+      {:ok, _participant} ->
+        # Successfully added, update users_to_add and clear selected user
+        updated_users_to_add = Enum.reject(socket.assigns.users_to_add, &(&1.id == user_id))
+
+        {:noreply,
+         socket
+         |> assign(users_to_add: updated_users_to_add, selected_user_id: nil)
+         |> put_flash(:info, "#{user_to_add.email} has been added to the chat room.")}
+
+      {:error, :users_not_in_same_account} ->
+        {:noreply, socket |> put_flash(:error, "User is not in the same account.")}
+
+      {:error, :user_already_in_room} ->
+        {:noreply, socket |> put_flash(:error, "User is already in the chat room.")}
+
+      {:error, _reason} ->
+        {:noreply, socket |> put_flash(:error, "Could not add user to chat room.")}
+    end
+  end
+
   defp page_title(:show), do: "Show Chat room"
   defp page_title(:edit), do: "Edit Chat room"
 
   defp empty_message_form(), do: to_form(Message.changeset(%Message{}, %{}))
-
-  defp create_guest_id() do
-    token = :crypto.strong_rand_bytes(32)
-    hashed_token = :crypto.hash(:sha256, token)
-    Base.url_encode64(hashed_token, padding: false)
-  end
 end

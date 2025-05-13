@@ -9,6 +9,15 @@
       </p>
     </div>
     <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
+      <%= if @current_user do %>
+        <.link href={~p"/chat_rooms"}>Chat Rooms</.link>
+        <.link href={~p"/invitations"}>Invite Users</.link>
+        <.link href={~p"/users/settings"}>Settings</.link>
+        <.link href={~p"/users/log_out"} method="delete">Log Out</.link>
+      <% else %>
+        <.link href={~p"/users/register"}>Register</.link>
+        <.link href={~p"/users/log_in"}>Log In</.link>
+      <% end %>
       <a href="https://twitter.com/elixirphoenix" class="hover:text-zinc-700">
         @elixirphoenix
       </a>

@@ -10,7 +10,15 @@ defmodule AiGroupChat.Accounts.User do
     field :current_password, :string, virtual: true, redact: true
     field :confirmed_at, :utc_datetime
 
+    belongs_to :account, AiGroupChat.Accounts.Account, type: :binary_id
+
     timestamps(type: :utc_datetime)
+  end
+
+  @doc false
+  def changeset(user, attrs) do
+    user
+    |> cast(attrs, [:email, :password, :hashed_password, :confirmed_at, :account_id])
   end
 
   @doc """
